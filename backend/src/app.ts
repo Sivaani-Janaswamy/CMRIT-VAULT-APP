@@ -6,6 +6,7 @@ import { modulesRouter } from './modules';
 import { errorHandler } from './common/middleware/errorHandler';
 import { notFound } from './common/middleware/notFound';
 import { requestLogger } from './common/middleware/requestLogger';
+import { logDebug } from './common/utils/logger';
 
 export function createApp() {
   const app = express();
@@ -16,6 +17,7 @@ export function createApp() {
   app.use(requestLogger);
 
   app.get('/health', (_req, res) => {
+    logDebug('GET /health received');
     res.status(200).json({
       success: true,
       message: 'OK',
