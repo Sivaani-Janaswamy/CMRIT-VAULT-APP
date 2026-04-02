@@ -19,13 +19,13 @@ Legend:
 | Common types | `backend/src/common/types/*` | ✅ | User and authenticated request types |
 | Common utils | `backend/src/common/utils/logger.ts` | ✅ | Debug logger exists |
 | Auth module | `backend/src/modules/auth/*` | ✅ | Sync profile flow implemented |
-| Users module | `backend/src/modules/users/*` | ✅ | `/v1/users/me` implemented |
+| Users module | `backend/src/modules/users/*` | ✅ | `/v1/users/me` + admin user management endpoints implemented |
 | Subjects module | `backend/src/modules/subjects/*` | ✅ | Read-only subject listing implemented |
 | Resources module | `backend/src/modules/resources/*` | ❌ | Not present |
 | Downloads module | `backend/src/modules/downloads/*` | ❌ | Not present |
 | Search module | `backend/src/modules/search/*` | ❌ | Not present |
 | Admin module | `backend/src/modules/admin/*` | ❌ | Not present |
-| Module router | `backend/src/modules/index.ts` | ✅ | Wires auth, users, subjects routers only |
+| Module router | `backend/src/modules/index.ts` | ✅ | Wires auth, users, admin-users, subjects routers |
 
 ## 2. API Endpoints
 
@@ -35,10 +35,11 @@ Legend:
 | `GET /v1/users/me` | Users | ✅ | Returns current user profile |
 | `GET /v1/subjects` | Subjects | ✅ | Read-only subject list |
 | `GET /health` | App bootstrap | ✅ | Health check route |
-| `PATCH /v1/users/me` | Users | ❌ | Planned, not implemented |
-| `GET /v1/admin/users` | Users/Admin | ❌ | Planned, not implemented |
-| `PATCH /v1/admin/users/:id/role` | Users/Admin | ❌ | Planned, not implemented |
-| `PATCH /v1/admin/users/:id/status` | Users/Admin | ❌ | Planned, not implemented |
+| `PATCH /v1/users/me` | Users | ✅ | Self profile update implemented |
+| `GET /v1/admin/users` | Users/Admin | ✅ | Admin user list with pagination and filters implemented |
+| `GET /v1/admin/users/:id` | Users/Admin | ✅ | Admin user detail endpoint implemented |
+| `PATCH /v1/admin/users/:id/role` | Users/Admin | ✅ | Admin role update implemented |
+| `PATCH /v1/admin/users/:id/status` | Users/Admin | ✅ | Admin active status update implemented |
 | `GET /v1/subjects/:id` | Subjects | ❌ | Planned, not implemented |
 | `POST /v1/admin/subjects` | Subjects/Admin | ❌ | Planned, not implemented |
 | `PATCH /v1/admin/subjects/:id` | Subjects/Admin | ❌ | Planned, not implemented |
@@ -139,10 +140,10 @@ Legend:
 | Resources module | Backend has no resources CRUD or signed URL flow | Core notes/question paper/faculty upload publishing cannot ship | Build `resources` module with repository/service/controller layers |
 | Downloads module | Download logging and history are absent | No audit trail or usage analytics | Add `downloads` module and connect it to signed download flow |
 | Search module | Algolia integration is missing | No fast discovery or subject-based search | Add search indexing sync after resource publish/update |
-| Admin module | No admin operations or moderation APIs | No content governance or account management | Implement admin endpoints after MVP content flow |
+| Admin module | No dedicated admin module yet; only admin user-management endpoints exist inside users module | Content governance is still incomplete for resources/downloads/search | Implement full admin module after MVP content flow |
 | Web backend integration | Next.js exists but is still starter-only | Web cannot consume auth/profile APIs yet | Add typed backend client and auth bootstrap flow |
 | Mobile content browsing | Flutter covers auth only | Users cannot browse content in app | Add subjects/resources/downloads screens and repositories |
-| API contract coverage | Only auth/users/subjects are implemented | Endpoint surface is incomplete | Prioritize core content endpoints before UI expansion |
+| API contract coverage | Auth/users/subjects are implemented, including admin user management endpoints | Endpoint surface is still incomplete for content lifecycle | Prioritize resources/downloads endpoints before UI expansion |
 
 ## 8. Technical Debt
 
@@ -172,7 +173,7 @@ Legend:
 | Item | Scope | Dependency |
 | --- | --- | --- |
 | Auth | Already done | Supabase Auth + backend sync |
-| Users | Complete missing endpoints | Auth + normalized role model |
+| Users | ✅ Completed (self update + admin list/detail/role/status) | Auth + normalized role model |
 | Subjects | Complete CRUD | Backend service/repository expansion |
 | Resources module | Full lifecycle | Supabase Storage + DB schema + role checks |
 | Downloads module | Logging and history | Resources + signed download URLs |
@@ -256,7 +257,7 @@ Legend:
 
 | Order | Task | Area | Why |
 | --- | --- | --- | --- |
-| 1 | Complete user endpoints (`PATCH /users/me`, admin role/status) | Backend | Required for role-based flows |
+| 1 | ✅ Complete user endpoints (`PATCH /users/me`, admin list/detail/role/status) | Backend | Completed and validated |
 | 2 | Complete subject CRUD (`GET/:id`, create/update/delete) | Backend | Needed before resources |
 | 3 | Build resources module (full lifecycle + storage) | Backend | Core product |
 | 4 | Build downloads module | Backend | Required for tracking |

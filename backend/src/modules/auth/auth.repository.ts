@@ -1,6 +1,6 @@
 import { supabaseServiceClient } from '../../integrations/supabase/client';
 import type { User } from '../../common/types/user';
-import type { UserProfile } from '../users/users.types';
+import type { RoleCode, UserProfile } from '../users/users.types';
 import { logDebug } from '../../common/utils/logger';
 
 class AuthRepository {
@@ -36,7 +36,11 @@ class AuthRepository {
     return data.id;
   }
 
-  private async resolveRoleCode(roleId: number): Promise<string> {
+  private isRoleCode(value: string): value is RoleCode {
+    return value === 'student' || value === 'faculty' || value === 'admin';
+  }
+
+  private async resolveRoleCode(roleId: number): Promise<RoleCode> {
     const { data, error } = await supabaseServiceClient
       .from('roles')
       .select('code')
@@ -51,7 +55,7 @@ class AuthRepository {
       return 'student';
     }
 
-    return data.code;
+    return this.isRoleCode(data.code) ? data.code : 'student';
   }
 
   async upsertFromAuthUser(user: User): Promise<UserProfile> {
