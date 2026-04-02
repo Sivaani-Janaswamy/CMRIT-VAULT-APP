@@ -7,16 +7,6 @@ Legend:
 - `⚠️` = partially implemented or incomplete
 - `❌` = missing
 
-## 1. Planned vs Actual Mismatch Summary
-
-| Area | Planned | Found | Issue |
-|---|---|---|---|
-| Backend architecture | Modular Node.js API with auth, users, subjects, resources, downloads, search, admin | Node.js backend exists with `auth`, `users`, `subjects` only | Resources, downloads, search, admin modules are missing |
-| Database contract | Normalized `roles -> users.role_id`, plus resources and downloads tables | Backend currently aligned for `roles`, `users`, `subjects` only | No backend modules yet for resources/downloads/admin/search |
-| Mobile app | Flutter app with auth bootstrap, role-based routing, feature structure | Flutter app exists with auth bootstrap, login/signup, splash, home | Notes/downloads/faculty/admin/search screens are missing |
-| Web frontend | Next.js frontend later | `frontend/` folder exists but has no app scaffold/files | Frontend is not implemented |
-| Architecture reference | `ARCHITECTURE.md` | Repo contains [`ARCHITECHURE.md`](./ARCHITECHURE.md) typo-named file | Naming mismatch for the reference document |
-
 ## 2. Backend Inventory
 
 | Module | File/Folder | Exists? | Notes |
