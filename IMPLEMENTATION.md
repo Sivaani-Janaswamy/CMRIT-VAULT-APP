@@ -25,7 +25,7 @@ Legend:
 | Downloads module | `backend/src/modules/downloads/*` | ❌ | Not present |
 | Search module | `backend/src/modules/search/*` | ❌ | Not present |
 | Admin module | `backend/src/modules/admin/*` | ❌ | Not present |
-| Module router | `backend/src/modules/index.ts` | ✅ | Wires auth, users, admin-users, subjects, admin-subjects, admin-resources routers |
+| Module router | `backend/src/modules/index.ts` | ✅ | Wires auth, users, admin-users, subjects, admin-subjects, resources, admin-resources routers |
 
 ## 2. API Endpoints
 
@@ -178,7 +178,7 @@ Clients cannot directly set status on creation.
 | --- | --- | --- | --- |
 | Mobile feature depth | Auth flow exists but feature modules stop at home | Feature growth becomes ad hoc | Add feature folders for subjects/resources/downloads/search |
 | Web app state | Starter Next.js page still shows template content | Production confusion and weak brand identity | Replace starter page with CMRIT Vault app shell and auth-aware layout |
-| Backend module surface | Missing resources/downloads/search/admin modules | Prevents MVP completion | Implement modules in the planned order |
+| Backend module surface | Missing downloads/search/admin modules | Prevents MVP completion | Implement modules in the planned order |
 | Shared API contracts | No shared API DTO package between mobile and web | Drift risk across clients | Introduce a stable response/types layer if needed later |
 | Content lifecycle | Client content flows are incomplete even though backend resources lifecycle exists | Upload/download/search cannot be end-to-end | Build client browsing and downstream slices next |
 
