@@ -13,9 +13,19 @@ class HomeScreen extends ConsumerWidget {
     final user = authState.user;
 
     if (authState.status == AuthStatus.bootstrapping ||
-        authState.status == AuthStatus.signingIn) {
+        authState.status == AuthStatus.signingIn ||
+        authState.status == AuthStatus.signingUp) {
       return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 12),
+              Text('Loading your account...'),
+            ],
+          ),
+        ),
       );
     }
 
@@ -30,10 +40,15 @@ class HomeScreen extends ConsumerWidget {
         ],
       ),
       body: Center(
-        child: Text(
-          user == null
-              ? 'Home'
-              : '${user.fullName} (${user.role})',
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              user == null ? 'Home' : '${user.fullName} (${user.role})',
+            ),
+            const SizedBox(height: 12),
+            const Text('Welcome to CMRIT Vault'),
+          ],
         ),
       ),
     );

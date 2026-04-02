@@ -1,11 +1,11 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
 
 import '../../../core/services/backend_api_service.dart';
 import '../../../core/services/supabase_service.dart';
+import '../../../core/utils/app_logger.dart';
 import '../domain/app_user.dart';
 import '../domain/auth_state.dart';
 
@@ -17,9 +17,9 @@ class AuthController extends Notifier<AuthState> {
 
   @override
   AuthState build() {
-    debugPrint('AuthController.build(): start');
+    appLog('AuthController.build(): start');
     ref.onDispose(() {
-      debugPrint('AuthController.build(): disposed, cancelling auth subscription');
+      appLog('AuthController.build(): disposed, cancelling auth subscription');
       _authSubscription?.cancel();
     });
 
@@ -28,29 +28,28 @@ class AuthController extends Notifier<AuthState> {
         .auth
         .onAuthStateChange
         .listen((data) {
-      debugPrint('AuthController.build(): auth state changed -> session=${data.session != null}');
+      appLog('AuthController.build(): auth state changed -> session=${data.session != null}');
       unawaited(_handleSession(data.session));
     });
-    debugPrint('AuthController.build(): returning bootstrapping state');
+    appLog('AuthController.build(): returning bootstrapping state');
     return AuthState.bootstrapping();
   }
 
   Future<void> _bootstrap() async {
-    debugPrint('AuthController._bootstrap(): start');
+    appLog('AuthController._bootstrap(): start');
     try {
       final session = ref.read(supabaseClientProvider).auth.currentSession;
-      debugPrint('AuthController._bootstrap(): currentSession=${session != null}');
+      appLog('AuthController._bootstrap(): currentSession=${session != null}');
       if (session == null) {
         state = AuthState.unauthenticated();
-        debugPrint('AuthController._bootstrap(): no session -> unauthenticated');
+        appLog('AuthController._bootstrap(): no session -> unauthenticated');
         return;
       }
 
       await _handleSession(session);
-      debugPrint('AuthController._bootstrap(): completed');
+      appLog('AuthController._bootstrap(): completed');
     } catch (error, stackTrace) {
-      debugPrint('AuthController._bootstrap(): error -> $error');
-      debugPrint('$stackTrace');
+      appLogError('AuthController._bootstrap(): error', error, stackTrace);
       state = AuthState.error(message: error.toString());
     }
   }
@@ -59,49 +58,81 @@ class AuthController extends Notifier<AuthState> {
     required String email,
     required String password,
   }) async {
-    debugPrint('AuthController.signIn(): start for $email');
+    appLog('AuthController.signIn(): start for $email');
     state = AuthState.signingIn();
     try {
       await ref.read(supabaseClientProvider).auth.signInWithPassword(
             email: email,
             password: password,
           );
-      debugPrint('AuthController.signIn(): Supabase signInWithPassword completed');
+      appLog('AuthController.signIn(): Supabase signInWithPassword completed');
     } on supabase.AuthException catch (error) {
-      debugPrint('AuthController.signIn(): auth exception -> ${error.message}');
+      appLog('AuthController.signIn(): auth exception -> ${error.message}');
       state = AuthState.unauthenticated(message: error.message);
     } catch (error) {
-      debugPrint('AuthController.signIn(): error -> $error');
+      appLog('AuthController.signIn(): error -> $error');
+      state = AuthState.unauthenticated(message: error.toString());
+    }
+  }
+
+  Future<void> signUp({
+    required String fullName,
+    required String email,
+    required String password,
+  }) async {
+    appLog('AuthController.signUp(): start for $email');
+    state = AuthState.signingUp();
+    try {
+      final result = await ref.read(supabaseClientProvider).auth.signUp(
+            email: email,
+            password: password,
+            data: {
+              'full_name': fullName,
+              'role': 'student',
+            },
+          );
+
+      appLog('AuthController.signUp(): Supabase signUp completed session=${result.session != null}');
+      if (result.session == null) {
+        state = AuthState.unauthenticated(
+          message: 'Account created. Please sign in to continue.',
+        );
+      }
+    } on supabase.AuthException catch (error) {
+      appLog('AuthController.signUp(): auth exception -> ${error.message}');
+      state = AuthState.unauthenticated(message: error.message);
+    } catch (error) {
+      appLog('AuthController.signUp(): error -> $error');
       state = AuthState.unauthenticated(message: error.toString());
     }
   }
 
   Future<void> signOut() async {
-    debugPrint('AuthController.signOut(): start');
+    appLog('AuthController.signOut(): start');
     await ref.read(supabaseClientProvider).auth.signOut();
     state = AuthState.unauthenticated();
-    debugPrint('AuthController.signOut(): completed');
+    appLog('AuthController.signOut(): completed');
   }
 
   Future<void> retryBootstrap() {
-    debugPrint('AuthController.retryBootstrap(): called');
+    appLog('AuthController.retryBootstrap(): called');
     return _bootstrap();
   }
 
   Future<void> _handleSession(supabase.Session? session) async {
-    debugPrint('AuthController._handleSession(): start session=${session != null}');
+    appLog('AuthController._handleSession(): start session=${session != null}');
     if (session == null) {
       state = AuthState.unauthenticated();
-      debugPrint('AuthController._handleSession(): no session -> unauthenticated');
+      appLog('AuthController._handleSession(): no session -> unauthenticated');
       return;
     }
 
     state = AuthState.bootstrapping();
     try {
       final api = ref.read(backendApiServiceProvider);
-      debugPrint('AuthController._handleSession(): calling /v1/auth/sync');
+      appLog('AuthController._handleSession(): calling /v1/auth/sync');
       await api.syncAuth();
-      debugPrint('AuthController._handleSession(): calling /v1/users/me');
+      appLog('AuthController._handleSession(): calling /v1/users/me');
       final userJson = await api.fetchCurrentUser();
       final user = AppUser.fromJson(userJson);
 
@@ -109,22 +140,26 @@ class AuthController extends Notifier<AuthState> {
         session: session,
         user: user,
       );
-      debugPrint(
+      appLog(
         'AuthController._handleSession(): authenticated role=${user.role}, email=${user.email}',
       );
     } on supabase.AuthException catch (error) {
-      debugPrint('AuthController._handleSession(): auth exception -> ${error.message}');
+      appLog('AuthController._handleSession(): auth exception -> ${error.message}');
       state = AuthState.error(
         session: session,
         message: error.message,
       );
     } catch (error) {
-      debugPrint('AuthController._handleSession(): error -> $error');
+      appLog('AuthController._handleSession(): error -> $error');
       state = AuthState.error(
         session: session,
         message: error.toString(),
       );
     }
   }
-  Future<void> bootstrap() => _bootstrap();
+
+  Future<void> bootstrap() {
+    appLog('AuthController.bootstrap(): called');
+    return _bootstrap();
+  }
 }

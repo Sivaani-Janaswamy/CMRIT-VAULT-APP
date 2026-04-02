@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../core/config/supabase_config.dart';
+import '../core/utils/app_logger.dart';
 import 'router/app_router.dart';
 
 class CmrItVaultApp extends ConsumerStatefulWidget {
@@ -22,7 +23,7 @@ class _CmrItVaultAppState extends ConsumerState<CmrItVaultApp> {
   }
 
   Future<void> _initializeSupabase() async {
-    debugPrint('CmrItVaultApp._initializeSupabase(): before Supabase.initialize');
+    appLog('CmrItVaultApp._initializeSupabase(): before Supabase.initialize');
     try {
       await Supabase.initialize(
         url: SupabaseConfig.url,
@@ -32,10 +33,9 @@ class _CmrItVaultAppState extends ConsumerState<CmrItVaultApp> {
           autoRefreshToken: true,
         ),
       );
-      debugPrint('CmrItVaultApp._initializeSupabase(): after Supabase.initialize');
+      appLog('CmrItVaultApp._initializeSupabase(): after Supabase.initialize');
     } catch (error, stackTrace) {
-      debugPrint('CmrItVaultApp._initializeSupabase(): error -> $error');
-      debugPrint('$stackTrace');
+      appLogError('CmrItVaultApp._initializeSupabase(): error', error, stackTrace);
       rethrow;
     }
   }
@@ -46,26 +46,42 @@ class _CmrItVaultAppState extends ConsumerState<CmrItVaultApp> {
       future: _initFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
-          debugPrint('CmrItVaultApp.build(): FutureBuilder loading');
+          appLog('CmrItVaultApp.build(): FutureBuilder loading');
           return const MaterialApp(
             home: Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            ),
-          );
-        }
-
-        if (snapshot.hasError) {
-          debugPrint('CmrItVaultApp.build(): FutureBuilder error -> ${snapshot.error}');
-          return MaterialApp(
-            home: Scaffold(
               body: Center(
-                child: Text('Supabase init failed: ${snapshot.error}'),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 12),
+                    Text('Starting app...'),
+                  ],
+                ),
               ),
             ),
           );
         }
 
-        debugPrint('CmrItVaultApp.build(): FutureBuilder success');
+        if (snapshot.hasError) {
+          appLog('CmrItVaultApp.build(): FutureBuilder error -> ${snapshot.error}');
+          return MaterialApp(
+            home: Scaffold(
+              body: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('Supabase init failed: ${snapshot.error}'),
+                    const SizedBox(height: 12),
+                    const Text('Please check the startup logs and retry.'),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
+
+        appLog('CmrItVaultApp.build(): FutureBuilder success');
         final router = ref.watch(appRouterProvider);
 
         return MaterialApp.router(

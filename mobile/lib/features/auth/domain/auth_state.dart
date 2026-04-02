@@ -6,6 +6,7 @@ enum AuthStatus {
   bootstrapping,
   unauthenticated,
   signingIn,
+  signingUp,
   authenticated,
   error,
 }
@@ -26,7 +27,9 @@ class AuthState {
   final String? message;
 
   bool get isBusy =>
-      status == AuthStatus.bootstrapping || status == AuthStatus.signingIn;
+      status == AuthStatus.bootstrapping ||
+      status == AuthStatus.signingIn ||
+      status == AuthStatus.signingUp;
 
   bool get hasUser => user != null;
 
@@ -59,6 +62,10 @@ class AuthState {
 
   factory AuthState.signingIn() {
     return const AuthState(status: AuthStatus.signingIn);
+  }
+
+  factory AuthState.signingUp() {
+    return const AuthState(status: AuthStatus.signingUp);
   }
 
   factory AuthState.authenticated({

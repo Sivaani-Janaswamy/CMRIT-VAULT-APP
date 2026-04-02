@@ -5,26 +5,29 @@ import 'package:go_router/go_router.dart';
 import '../application/auth_controller.dart';
 import '../domain/auth_state.dart';
 
-class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({super.key});
+class SignupScreen extends ConsumerStatefulWidget {
+  const SignupScreen({super.key});
 
   @override
-  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<SignupScreen> createState() => _SignupScreenState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen> {
+class _SignupScreenState extends ConsumerState<SignupScreen> {
+  final _fullNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
   @override
   void dispose() {
+    _fullNameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  Future<void> _signIn() async {
-    await ref.read(authControllerProvider.notifier).signIn(
+  Future<void> _signUp() async {
+    await ref.read(authControllerProvider.notifier).signUp(
+          fullName: _fullNameController.text.trim(),
           email: _emailController.text.trim(),
           password: _passwordController.text,
         );
@@ -33,9 +36,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
-    final isLoading = authState.status == AuthStatus.signingIn;
+    final isLoading = authState.status == AuthStatus.signingUp;
 
     return Scaffold(
+      appBar: AppBar(title: const Text('Sign Up')),
       body: Center(
         child: SingleChildScrollView(
           child: Padding(
@@ -45,6 +49,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  TextField(
+                    controller: _fullNameController,
+                    decoration: const InputDecoration(labelText: 'Full name'),
+                  ),
+                  const SizedBox(height: 12),
                   TextField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
@@ -58,19 +67,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   const SizedBox(height: 20),
                   FilledButton(
-                    onPressed: isLoading ? null : _signIn,
-                    child: Text(isLoading ? 'Signing in...' : 'Login'),
+                    onPressed: isLoading ? null : _signUp,
+                    child: Text(isLoading ? 'Creating account...' : 'Sign Up'),
                   ),
                   TextButton(
-                    onPressed: isLoading ? null : () => context.go('/signup'),
-                    child: const Text('Sign Up'),
+                    onPressed: isLoading ? null : () => context.go('/login'),
+                    child: const Text('Back to Login'),
                   ),
                   if (authState.message != null) ...[
                     const SizedBox(height: 12),
-                    Text(
-                      authState.message!,
-                      textAlign: TextAlign.center,
-                    ),
+                    Text(authState.message!, textAlign: TextAlign.center),
                   ],
                 ],
               ),

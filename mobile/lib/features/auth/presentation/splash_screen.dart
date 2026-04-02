@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../application/auth_controller.dart';
 import '../domain/auth_state.dart';
+import '../../../core/utils/app_logger.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -16,18 +17,21 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    debugPrint('SplashScreen.initState(): calling bootstrap()');
+    appLog('SplashScreen.initState(): calling bootstrap()');
 
-    // 🔥 THIS IS THE IMPORTANT PART
     Future.microtask(() {
-      debugPrint('SplashScreen.initState(): bootstrap microtask fired');
-      ref.read(authControllerProvider.notifier).bootstrap();
+      appLog('SplashScreen.initState(): bootstrap microtask fired');
+      try {
+        ref.read(authControllerProvider.notifier).bootstrap();
+      } catch (error, stackTrace) {
+        appLogError('SplashScreen.initState(): bootstrap threw', error, stackTrace);
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('SplashScreen.build(): widget building');
+    appLog('SplashScreen.build(): widget building');
     final authState = ref.watch(authControllerProvider);
 
     return Scaffold(
@@ -36,6 +40,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
             ? Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  const Text('Startup error'),
+                  const SizedBox(height: 8),
                   Text(authState.message ?? 'Something went wrong'),
                   const SizedBox(height: 12),
                   FilledButton(
@@ -45,7 +51,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                   ),
                 ],
               )
-            : const CircularProgressIndicator(),
+            : const Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 12),
+                  Text('Checking session...'),
+                ],
+              ),
       ),
     );
   }

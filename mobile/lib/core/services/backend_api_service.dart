@@ -1,11 +1,11 @@
 import 'dart:convert';
 
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/app_config.dart';
+import '../utils/app_logger.dart';
 import 'supabase_service.dart';
 
 final backendApiServiceProvider = Provider<BackendApiService>((ref) {
@@ -25,16 +25,16 @@ class BackendApiService {
   final SupabaseClient supabaseClient;
 
   Future<void> syncAuth() async {
-    debugPrint('BackendApiService.syncAuth(): start');
+    appLog('BackendApiService.syncAuth(): start');
     await _request(
       method: 'POST',
       path: '/v1/auth/sync',
     );
-    debugPrint('BackendApiService.syncAuth(): done');
+    appLog('BackendApiService.syncAuth(): done');
   }
 
   Future<Map<String, dynamic>> fetchCurrentUser() async {
-    debugPrint('BackendApiService.fetchCurrentUser(): start');
+    appLog('BackendApiService.fetchCurrentUser(): start');
     final response = await _request(
       method: 'GET',
       path: '/v1/users/me',
@@ -44,7 +44,7 @@ class BackendApiService {
     if (data is Map<String, dynamic>) {
       final user = data['user'];
       if (user is Map<String, dynamic>) {
-        debugPrint('BackendApiService.fetchCurrentUser(): success');
+        appLog('BackendApiService.fetchCurrentUser(): success');
         return user;
       }
     }
@@ -59,7 +59,7 @@ class BackendApiService {
   }) async {
     final session = supabaseClient.auth.currentSession;
     if (session == null) {
-      debugPrint('BackendApiService._request(): no active session');
+      appLog('BackendApiService._request(): no active session');
       throw AuthException('No active session');
     }
 
@@ -91,12 +91,12 @@ class BackendApiService {
         : jsonDecode(response.body) as Map<String, dynamic>;
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      debugPrint('BackendApiService._request(): success $method $path -> ${response.statusCode}');
+      appLog('BackendApiService._request(): success $method $path -> ${response.statusCode}');
       return decoded;
     }
 
     final message = decoded['message'] as String? ?? 'Request failed';
-    debugPrint('BackendApiService._request(): error $method $path -> ${response.statusCode} $message');
+    appLog('BackendApiService._request(): error $method $path -> ${response.statusCode} $message');
     throw Exception(message);
   }
 }
