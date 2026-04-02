@@ -20,12 +20,12 @@ Legend:
 | Common utils | `backend/src/common/utils/logger.ts` | ✅ | Debug logger exists |
 | Auth module | `backend/src/modules/auth/*` | ✅ | Sync profile flow implemented |
 | Users module | `backend/src/modules/users/*` | ✅ | `/v1/users/me` + admin user management endpoints implemented |
-| Subjects module | `backend/src/modules/subjects/*` | ✅ | Read-only subject listing implemented |
+| Subjects module | `backend/src/modules/subjects/*` | ✅ | Subject list/detail + admin CRUD endpoints implemented |
 | Resources module | `backend/src/modules/resources/*` | ❌ | Not present |
 | Downloads module | `backend/src/modules/downloads/*` | ❌ | Not present |
 | Search module | `backend/src/modules/search/*` | ❌ | Not present |
 | Admin module | `backend/src/modules/admin/*` | ❌ | Not present |
-| Module router | `backend/src/modules/index.ts` | ✅ | Wires auth, users, admin-users, subjects routers |
+| Module router | `backend/src/modules/index.ts` | ✅ | Wires auth, users, admin-users, subjects, admin-subjects routers |
 
 ## 2. API Endpoints
 
@@ -40,10 +40,10 @@ Legend:
 | `GET /v1/admin/users/:id` | Users/Admin | ✅ | Admin user detail endpoint implemented |
 | `PATCH /v1/admin/users/:id/role` | Users/Admin | ✅ | Admin role update implemented |
 | `PATCH /v1/admin/users/:id/status` | Users/Admin | ✅ | Admin active status update implemented |
-| `GET /v1/subjects/:id` | Subjects | ❌ | Planned, not implemented |
-| `POST /v1/admin/subjects` | Subjects/Admin | ❌ | Planned, not implemented |
-| `PATCH /v1/admin/subjects/:id` | Subjects/Admin | ❌ | Planned, not implemented |
-| `DELETE /v1/admin/subjects/:id` | Subjects/Admin | ❌ | Planned, not implemented |
+| `GET /v1/subjects/:id` | Subjects | ✅ | Subject detail endpoint implemented |
+| `POST /v1/admin/subjects` | Subjects/Admin | ✅ | Admin subject creation implemented |
+| `PATCH /v1/admin/subjects/:id` | Subjects/Admin | ✅ | Admin subject update implemented |
+| `DELETE /v1/admin/subjects/:id` | Subjects/Admin | ✅ | Admin subject soft-delete implemented |
 | `GET /v1/resources` | Resources | ❌ | Missing module |
 | `GET /v1/resources/:id` | Resources | ❌ | Missing module |
 | `POST /v1/resources` | Resources | ❌ | Missing module |
@@ -68,7 +68,7 @@ Legend:
 | --- | --- | --- | --- |
 | `roles` | No dedicated repository | ⚠️ | Role lookups are handled indirectly in auth/users repositories |
 | `users` | `backend/src/modules/auth/auth.repository.ts`, `backend/src/modules/users/users.repository.ts` | ✅ | Role resolution uses `role_id` + `roles.code` |
-| `subjects` | `backend/src/modules/subjects/subjects.repository.ts` | ✅ | Read-only repository only |
+| `subjects` | `backend/src/modules/subjects/subjects.repository.ts` | ✅ | Active-list + detail + admin CRUD repository implemented |
 | `resources` | `backend/src/modules/resources/*` | ❌ | Missing |
 | `downloads` | `backend/src/modules/downloads/*` | ❌ | Missing |
 | `user_subject_access` | Not implemented | ❌ | Planned only |
@@ -124,8 +124,8 @@ Legend:
 | Feature | Backend | Mobile | Web | Status |
 | --- | --- | --- | --- | --- |
 | Auth bootstrap | ✅ | ✅ | ⚠️ | Backend and mobile exist; web scaffold exists but auth pages are missing |
-| Users profile | ✅ | ✅ | ❌ | Web profile flow missing |
-| Subjects browsing | ⚠️ | ❌ | ❌ | Backend list exists only |
+| Users profile | ✅ | ❌ | ❌ | Web profile flow missing |
+| Subjects browsing | ✅ | ❌ | ❌ | Backend subject list/detail/admin CRUD are implemented |
 | Resources lifecycle | ❌ | ❌ | ❌ | Not implemented yet |
 | Downloads tracking | ❌ | ❌ | ❌ | Not implemented yet |
 | Search | ❌ | ❌ | ❌ | Not implemented yet |
@@ -143,7 +143,7 @@ Legend:
 | Admin module | No dedicated admin module yet; only admin user-management endpoints exist inside users module | Content governance is still incomplete for resources/downloads/search | Implement full admin module after MVP content flow |
 | Web backend integration | Next.js exists but is still starter-only | Web cannot consume auth/profile APIs yet | Add typed backend client and auth bootstrap flow |
 | Mobile content browsing | Flutter covers auth only | Users cannot browse content in app | Add subjects/resources/downloads screens and repositories |
-| API contract coverage | Auth/users/subjects are implemented, including admin user management endpoints | Endpoint surface is still incomplete for content lifecycle | Prioritize resources/downloads endpoints before UI expansion |
+| API contract coverage | Auth/users/subjects are implemented, including admin user management and subjects CRUD endpoints | Endpoint surface is still incomplete for content lifecycle | Prioritize resources/downloads endpoints before UI expansion |
 
 ## 8. Technical Debt
 
@@ -174,7 +174,7 @@ Legend:
 | --- | --- | --- |
 | Auth | Already done | Supabase Auth + backend sync |
 | Users | ✅ Completed (self update + admin list/detail/role/status) | Auth + normalized role model |
-| Subjects | Complete CRUD | Backend service/repository expansion |
+| Subjects | ✅ Completed (list/detail + admin create/update/delete) | Backend service/repository expansion |
 | Resources module | Full lifecycle | Supabase Storage + DB schema + role checks |
 | Downloads module | Logging and history | Resources + signed download URLs |
 
@@ -245,7 +245,7 @@ Legend:
 | --- | --- | --- | --- |
 | 1 | Implement resources module | Backend | Core content publishing and browsing depend on it |
 | 2 | Implement downloads module | Backend | Needed for tracking, history, and compliance |
-| 3 | Complete subject CRUD | Backend | Needed for full admin/content management |
+| 3 | ✅ Complete subject CRUD | Backend | Completed and validated |
 | 4 | Replace Next.js starter page | Web | Current UI is only template content |
 | 5 | Add web backend client and auth flow | Web | Required for future production use |
 | 6 | Add content browsing screens to mobile | Mobile | Mobile app is auth-only right now |
@@ -258,7 +258,7 @@ Legend:
 | Order | Task | Area | Why |
 | --- | --- | --- | --- |
 | 1 | ✅ Complete user endpoints (`PATCH /users/me`, admin list/detail/role/status) | Backend | Completed and validated |
-| 2 | Complete subject CRUD (`GET/:id`, create/update/delete) | Backend | Needed before resources |
+| 2 | ✅ Complete subject CRUD (`GET/:id`, create/update/delete) | Backend | Completed and validated |
 | 3 | Build resources module (full lifecycle + storage) | Backend | Core product |
 | 4 | Build downloads module | Backend | Required for tracking |
 | 5 | Implement mobile subject + resource browsing | Mobile | Uses backend APIs |
