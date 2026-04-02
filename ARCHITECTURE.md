@@ -161,7 +161,45 @@ Why:
 
 The app should never show a blank screen during auth transitions.
 
-## 10. Feature Map
+## 10. Resource Lifecycle and Visibility Model
+
+### Status Lifecycle
+
+draft → pending_review → published  
+pending_review → rejected  
+any → archived
+
+### Role Permissions
+
+
+| Role | draft | pending_review | published | rejected | archived |
+| --- | --- | --- | --- | --- | --- |
+| student | ❌ | ❌ | ✅ | ❌ | ❌ |
+| faculty | ✅ (own only) | ✅ (own only) | ✅ | ✅ (own only) | ❌ |
+| admin | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+### Visibility Rules
+
+- Students can only see `published` resources
+- Faculty can see:
+  - all published resources
+  - their own draft, rejected and pending resources
+- Admin can see all resources
+
+### Moderation
+
+- Only admin can change status:
+  - pending_review → published
+  - pending_review → rejected
+
+### Endpoints
+
+- POST /v1/resources → create draft
+- POST /v1/resources/:id/submit → draft → pending_review
+- PATCH /v1/admin/resources/:id/status → publish/reject
+- DELETE /v1/resources/:id → archive
+
+## 11. Feature Map
 
 ### Phase 1: MVP
 
@@ -191,7 +229,7 @@ The app should never show a blank screen during auth transitions.
 | Audit logs | Security and operational tracing |
 | Web frontend | Next.js reusing the same API |
 
-## 11. Security Model
+## 12. Security Model
 
 | Area | Rule |
 |---|---|
@@ -202,7 +240,7 @@ The app should never show a blank screen during auth transitions.
 | Logging | Never log passwords, tokens, secrets, or raw auth headers |
 | Sensitive state | Keep user session and tokens secure on device |
 
-## 12. Performance Model
+## 13. Performance Model
 
 | Area | Strategy |
 |---|---|
@@ -212,7 +250,7 @@ The app should never show a blank screen during auth transitions.
 | File delivery | Serve files through signed URLs and storage CDN paths |
 | Search | Use Algolia for fast discovery instead of database text search |
 
-## 13. Important Project Rules
+## 14. Important Project Rules
 
 | Rule | Meaning |
 |---|---|
@@ -224,7 +262,7 @@ The app should never show a blank screen during auth transitions.
 | Update contracts together | Schema, backend, and mobile expectations must stay aligned |
 | Prefer small changes | Keep diffs focused and production-safe |
 
-## 14. Schema and Contract Alignment
+## 15. Schema and Contract Alignment
 
 The schema is the contract.
 
@@ -239,7 +277,7 @@ The schema is the contract.
 
 Any new feature should reuse these contracts instead of introducing parallel concepts.
 
-## 15. Future Extension Guidelines
+## 16. Future Extension Guidelines
 
 ### When adding a new feature
 
@@ -260,7 +298,7 @@ Any new feature should reuse these contracts instead of introducing parallel con
 | Update mobile parsing | Keep API contract compatible |
 | Validate RLS and indexes | Ensure security and performance remain intact |
 
-## 16. Working State Summary
+## 17. Working State Summary
 
 | Area | Current State |
 |---|---|
@@ -271,7 +309,7 @@ Any new feature should reuse these contracts instead of introducing parallel con
 | Resources and downloads backend modules | Planned for later implementation |
 | Web frontend | Planned later with Next.js |
 
-## 17. Final Note
+## 18. Final Note
 
 This project should stay simple, modular, and production-oriented.
 

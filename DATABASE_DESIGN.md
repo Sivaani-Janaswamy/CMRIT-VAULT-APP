@@ -343,7 +343,7 @@ All endpoints use the standard envelope:
 | `POST` | `/v1/resources/:id/complete` | Owner/Admin | Mark upload complete | No body | `{ resource }` |
 | `POST` | `/v1/resources/:id/submit` | Owner/Admin | Submit for review/publish | Optional review note | `{ resource }` |
 | `DELETE` | `/v1/resources/:id` | Owner/Admin | Archive resource | No body | `{ resource }` |
-| `PATCH` | `/v1/admin/resources/:id/status` | Admin | Moderate resource | `{ status, reviewNote }` | `{ resource }` |
+| `PATCH` | `/v1/admin/resources/:id/status` | Admin | Moderate resource | `{ status }` | `{ resource }` |
 
 ### Downloads
 

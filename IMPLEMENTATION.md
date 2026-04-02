@@ -21,11 +21,11 @@ Legend:
 | Auth module | `backend/src/modules/auth/*` | ✅ | Sync profile flow implemented |
 | Users module | `backend/src/modules/users/*` | ✅ | `/v1/users/me` + admin user management endpoints implemented |
 | Subjects module | `backend/src/modules/subjects/*` | ✅ | Subject list/detail + admin CRUD endpoints implemented |
-| Resources module | `backend/src/modules/resources/*` | ❌ | Not present |
+| Resources module | `backend/src/modules/resources/*` | ✅ | Full lifecycle + moderation endpoint implemented |
 | Downloads module | `backend/src/modules/downloads/*` | ❌ | Not present |
 | Search module | `backend/src/modules/search/*` | ❌ | Not present |
 | Admin module | `backend/src/modules/admin/*` | ❌ | Not present |
-| Module router | `backend/src/modules/index.ts` | ✅ | Wires auth, users, admin-users, subjects, admin-subjects routers |
+| Module router | `backend/src/modules/index.ts` | ✅ | Wires auth, users, admin-users, subjects, admin-subjects, admin-resources routers |
 
 ## 2. API Endpoints
 
@@ -44,14 +44,15 @@ Legend:
 | `POST /v1/admin/subjects` | Subjects/Admin | ✅ | Admin subject creation implemented |
 | `PATCH /v1/admin/subjects/:id` | Subjects/Admin | ✅ | Admin subject update implemented |
 | `DELETE /v1/admin/subjects/:id` | Subjects/Admin | ✅ | Admin subject soft-delete implemented |
-| `GET /v1/resources` | Resources | ❌ | Missing module |
-| `GET /v1/resources/:id` | Resources | ❌ | Missing module |
-| `POST /v1/resources` | Resources | ❌ | Missing module |
-| `PATCH /v1/resources/:id` | Resources | ❌ | Missing module |
-| `POST /v1/resources/:id/complete` | Resources | ❌ | Missing module |
-| `POST /v1/resources/:id/submit` | Resources | ❌ | Missing module |
-| `DELETE /v1/resources/:id` | Resources | ❌ | Missing module |
-| `POST /v1/resources/:id/download-url` | Resources/Downloads | ❌ | Missing module |
+| `GET /v1/resources` | Resources | ✅ | Authenticated visible-resource list implemented |
+| `GET /v1/resources/:id` | Resources | ✅ | Resource detail endpoint implemented |
+| `POST /v1/resources` | Resources | ✅ | Creates draft resource metadata and upload session |
+| `PATCH /v1/resources/:id` | Resources | ✅ | Resource metadata update implemented |
+| `POST /v1/resources/:id/complete` | Resources | ✅ | Upload completion checkpoint implemented |
+| `POST /v1/resources/:id/submit` | Resources | ✅ | Submit-to-review transition implemented |
+| `DELETE /v1/resources/:id` | Resources | ✅ | Soft archive implemented |
+| `PATCH /v1/admin/resources/:id/status` | Resources/Admin | ✅ | Admin moderation transition implemented |
+| `POST /v1/resources/:id/download-url` | Resources/Downloads | ❌ | Download URL flow still belongs to the downloads slice |
 | `GET /v1/downloads/me` | Downloads | ❌ | Missing module |
 | `GET /v1/admin/downloads` | Downloads/Admin | ❌ | Missing module |
 | `GET /v1/search/resources` | Search | ❌ | Missing module |
@@ -62,6 +63,32 @@ Legend:
 | `GET /v1/faculty/resources` | Resources | ❌ | Missing module |
 | `GET /v1/faculty/resources/:id/stats` | Resources | ❌ | Missing module |
 
+### Resource Lifecycle and Visibility Model
+
+Resource lifecycle:
+- `draft` → `pending_review` → `published`
+- `draft` → `pending_review` → `rejected`
+- `published` → `archived`
+- `rejected` → `archived` (optional cleanup)
+
+Status meanings:
+- `draft`: initial state after creation
+- `pending_review`: submitted for approval
+- `published`: visible to all users
+- `rejected`: rejected by moderator, visible only to owner/admin
+- `archived`: soft deleted
+
+Visibility rules:
+
+| Role | draft | pending_review | published | rejected | archived |
+| --- | --- | --- | --- | --- | --- |
+| student | ❌ | ❌ | ✅ | ❌ | ❌ |
+| faculty | ✅ (own only) | ✅ (own only) | ✅ | ✅ (own only) | ❌ |
+| admin | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+Status transitions are controlled by backend service logic.
+Clients cannot directly set status on creation.
+
 ## 3. Database Mapping
 
 | Table | Repository | Exists? | Notes |
@@ -69,7 +96,7 @@ Legend:
 | `roles` | No dedicated repository | ⚠️ | Role lookups are handled indirectly in auth/users repositories |
 | `users` | `backend/src/modules/auth/auth.repository.ts`, `backend/src/modules/users/users.repository.ts` | ✅ | Role resolution uses `role_id` + `roles.code` |
 | `subjects` | `backend/src/modules/subjects/subjects.repository.ts` | ✅ | Active-list + detail + admin CRUD repository implemented |
-| `resources` | `backend/src/modules/resources/*` | ❌ | Missing |
+| `resources` | `backend/src/modules/resources/*` | ✅ | Repository and service implemented |
 | `downloads` | `backend/src/modules/downloads/*` | ❌ | Missing |
 | `user_subject_access` | Not implemented | ❌ | Planned only |
 | `audit_logs` | Not implemented | ❌ | Planned only |
@@ -126,7 +153,7 @@ Legend:
 | Auth bootstrap | ✅ | ✅ | ⚠️ | Backend and mobile exist; web scaffold exists but auth pages are missing |
 | Users profile | ✅ | ❌ | ❌ | Web profile flow missing |
 | Subjects browsing | ✅ | ❌ | ❌ | Backend subject list/detail/admin CRUD are implemented |
-| Resources lifecycle | ❌ | ❌ | ❌ | Not implemented yet |
+| Resources lifecycle | ✅ | ❌ | ❌ | ⚠️ Backend lifecycle and moderation are implemented; clients still need content screens |
 | Downloads tracking | ❌ | ❌ | ❌ | Not implemented yet |
 | Search | ❌ | ❌ | ❌ | Not implemented yet |
 | Faculty dashboard | ❌ | ❌ | ❌ | Not implemented yet |
@@ -137,7 +164,7 @@ Legend:
 
 | Area | Problem | Impact | Recommendation |
 | --- | --- | --- | --- |
-| Resources module | Backend has no resources CRUD or signed URL flow | Core notes/question paper/faculty upload publishing cannot ship | Build `resources` module with repository/service/controller layers |
+| Resources module | Backend resources lifecycle exists, but mobile/web resource browsing is still missing | Users cannot browse content in client apps yet | Add mobile/web resource browsing and detail flows |
 | Downloads module | Download logging and history are absent | No audit trail or usage analytics | Add `downloads` module and connect it to signed download flow |
 | Search module | Algolia integration is missing | No fast discovery or subject-based search | Add search indexing sync after resource publish/update |
 | Admin module | No dedicated admin module yet; only admin user-management endpoints exist inside users module | Content governance is still incomplete for resources/downloads/search | Implement full admin module after MVP content flow |
@@ -153,7 +180,7 @@ Legend:
 | Web app state | Starter Next.js page still shows template content | Production confusion and weak brand identity | Replace starter page with CMRIT Vault app shell and auth-aware layout |
 | Backend module surface | Missing resources/downloads/search/admin modules | Prevents MVP completion | Implement modules in the planned order |
 | Shared API contracts | No shared API DTO package between mobile and web | Drift risk across clients | Introduce a stable response/types layer if needed later |
-| Content lifecycle | Resources lifecycle is not in code yet | Upload/download/search cannot be end-to-end | Build resource state machine next |
+| Content lifecycle | Client content flows are incomplete even though backend resources lifecycle exists | Upload/download/search cannot be end-to-end | Build client browsing and downstream slices next |
 
 ## 9. Production Risks
 
@@ -175,7 +202,7 @@ Legend:
 | Auth | Already done | Supabase Auth + backend sync |
 | Users | ✅ Completed (self update + admin list/detail/role/status) | Auth + normalized role model |
 | Subjects | ✅ Completed (list/detail + admin create/update/delete) | Backend service/repository expansion |
-| Resources module | Full lifecycle | Supabase Storage + DB schema + role checks |
+| Resources module | ✅ Full lifecycle + moderation completed | Supabase Storage + DB schema + role checks |
 | Downloads module | Logging and history | Resources + signed download URLs |
 
 ### Phase 2: Usability
@@ -243,15 +270,13 @@ Legend:
 
 | Priority | Task | Area | Why it matters |
 | --- | --- | --- | --- |
-| 1 | Implement resources module | Backend | Core content publishing and browsing depend on it |
-| 2 | Implement downloads module | Backend | Needed for tracking, history, and compliance |
-| 3 | ✅ Complete subject CRUD | Backend | Completed and validated |
-| 4 | Replace Next.js starter page | Web | Current UI is only template content |
-| 5 | Add web backend client and auth flow | Web | Required for future production use |
-| 6 | Add content browsing screens to mobile | Mobile | Mobile app is auth-only right now |
-| 7 | Add search module after resources | Backend | Search depends on stable resource metadata |
-| 8 | Add admin module | Backend + Web | Needed for moderation and operational control |
-| 9 | Add production hardening | Cross-cutting | Needed before scaling beyond MVP usage |
+| 1 | Implement downloads module | Backend | Needed for tracking, history, and compliance |
+| 2 | Replace Next.js starter page | Web | Current UI is only template content |
+| 3 | Add web backend client and auth flow | Web | Required for future production use |
+| 4 | Add content browsing screens to mobile | Mobile | Mobile app is auth-only right now |
+| 5 | Add search module | Backend | Search depends on stable resource metadata |
+| 6 | Add admin module | Backend + Web | Needed for moderation and operational control |
+| 7 | Add production hardening | Cross-cutting | Needed before scaling beyond MVP usage |
 
 ## 13. Execution Plan (Single Source of Truth)
 
@@ -259,7 +284,7 @@ Legend:
 | --- | --- | --- | --- |
 | 1 | ✅ Complete user endpoints (`PATCH /users/me`, admin list/detail/role/status) | Backend | Completed and validated |
 | 2 | ✅ Complete subject CRUD (`GET/:id`, create/update/delete) | Backend | Completed and validated |
-| 3 | Build resources module (full lifecycle + storage) | Backend | Core product |
+| 3 | ✅ Build resources module (full lifecycle + storage) | Backend | Core product |
 | 4 | Build downloads module | Backend | Required for tracking |
 | 5 | Implement mobile subject + resource browsing | Mobile | Uses backend APIs |
 | 6 | Replace Next.js starter UI with app shell | Web | Clean UI foundation |
