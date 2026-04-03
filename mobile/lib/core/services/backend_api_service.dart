@@ -52,10 +52,65 @@ class BackendApiService {
     throw const FormatException('Invalid /v1/users/me response');
   }
 
+  Future<Map<String, dynamic>> fetchSubjects({
+    int page = 1,
+    int pageSize = 20,
+  }) {
+    appLog('BackendApiService.fetchSubjects(): start');
+    return _request(
+      method: 'GET',
+      path: '/v1/subjects',
+      queryParameters: {
+        'page': page.toString(),
+        'pageSize': pageSize.toString(),
+      },
+    );
+  }
+
+  Future<Map<String, dynamic>> fetchResources({
+    required String subjectId,
+    int page = 1,
+    int pageSize = 20,
+  }) {
+    appLog('BackendApiService.fetchResources(): start subjectId=$subjectId');
+    return _request(
+      method: 'GET',
+      path: '/v1/resources',
+      queryParameters: {
+        'subjectId': subjectId,
+        'page': page.toString(),
+        'pageSize': pageSize.toString(),
+      },
+    );
+  }
+
+  Future<Map<String, dynamic>> fetchResourceById(String resourceId) {
+    appLog('BackendApiService.fetchResourceById(): start resourceId=$resourceId');
+    return _request(
+      method: 'GET',
+      path: '/v1/resources/$resourceId',
+    );
+  }
+
+  Future<Map<String, dynamic>> createDownloadUrl(
+    String resourceId, {
+    String source = 'mobile',
+  }) {
+    appLog('BackendApiService.createDownloadUrl(): start resourceId=$resourceId source=$source');
+    return _request(
+      method: 'POST',
+      path: '/v1/resources/$resourceId/download-url',
+      body: {
+        'source': source,
+      },
+    );
+  }
+
   Future<Map<String, dynamic>> _request({
     required String method,
     required String path,
     Map<String, dynamic>? body,
+    Map<String, String>? queryParameters,
   }) async {
     final session = supabaseClient.auth.currentSession;
     if (session == null) {
@@ -63,7 +118,7 @@ class BackendApiService {
       throw AuthException('No active session');
     }
 
-    final uri = Uri.parse('$baseUrl$path');
+    final uri = Uri.parse('$baseUrl$path').replace(queryParameters: queryParameters);
     final headers = <String, String>{
       'Authorization': 'Bearer ${session.accessToken}',
       'Content-Type': 'application/json',

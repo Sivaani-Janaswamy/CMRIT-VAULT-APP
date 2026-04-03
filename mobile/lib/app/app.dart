@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../core/config/supabase_config.dart';
+import '../core/theme/app_colors.dart';
 import '../core/utils/app_logger.dart';
 import 'router/app_router.dart';
 
@@ -87,6 +88,28 @@ class _CmrItVaultAppState extends ConsumerState<CmrItVaultApp> {
         return MaterialApp.router(
           debugShowCheckedModeBanner: false,
           routerConfig: router,
+          theme: ThemeData(
+            useMaterial3: true,
+            scaffoldBackgroundColor: AppColors.background,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: AppColors.primary,
+              brightness: Brightness.light,
+            ).copyWith(
+              primary: AppColors.primary,
+              secondary: AppColors.highlightGreen,
+              tertiary: AppColors.highlightOrange,
+              surface: Colors.white,
+            ),
+            appBarTheme: const AppBarTheme(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.text,
+              centerTitle: false,
+            ),
+            textTheme: Typography.blackMountainView.apply(
+              bodyColor: AppColors.text,
+              displayColor: AppColors.text,
+            ),
+          ),
         );
       },
     );

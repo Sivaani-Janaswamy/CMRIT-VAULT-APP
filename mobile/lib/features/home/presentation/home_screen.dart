@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../auth/application/auth_controller.dart';
 import '../../auth/domain/auth_state.dart';
+import '../../../core/theme/app_colors.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -39,15 +41,38 @@ class HomeScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: Center(
+      body: Padding(
+        padding: const EdgeInsets.all(16),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              user == null ? 'Home' : '${user.fullName} (${user.role})',
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      user == null ? 'Home' : '${user.fullName} (${user.role})',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    const Text('Welcome to CMRIT Vault'),
+                  ],
+                ),
+              ),
             ),
-            const SizedBox(height: 12),
-            const Text('Welcome to CMRIT Vault'),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.text,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+              onPressed: () => context.go('/subjects'),
+              icon: const Icon(Icons.menu_book),
+              label: const Text('Browse Subjects'),
+            ),
           ],
         ),
       ),

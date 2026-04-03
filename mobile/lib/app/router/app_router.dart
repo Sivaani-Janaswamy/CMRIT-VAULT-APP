@@ -10,6 +10,10 @@ import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/signup_screen.dart';
 import '../../features/auth/presentation/splash_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
+import '../../features/subjects/domain/subject.dart';
+import '../../features/subjects/presentation/resource_detail_screen.dart';
+import '../../features/subjects/presentation/subject_detail_screen.dart';
+import '../../features/subjects/presentation/subject_list_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authControllerProvider);
@@ -62,6 +66,28 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/home',
         builder: (context, state) => const HomeScreen(),
+      ),
+      GoRoute(
+        path: '/subjects',
+        builder: (context, state) => const SubjectListScreen(),
+      ),
+      GoRoute(
+        path: '/subjects/:subjectId',
+        builder: (context, state) {
+          final subjectId = state.pathParameters['subjectId'] ?? '';
+          final subject = state.extra is Subject ? state.extra as Subject : null;
+          return SubjectDetailScreen(
+            subjectId: subjectId,
+            subject: subject,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/resources/:resourceId',
+        builder: (context, state) {
+          final resourceId = state.pathParameters['resourceId'] ?? '';
+          return ResourceDetailScreen(resourceId: resourceId);
+        },
       ),
     ],
     errorBuilder: (context, state) {
