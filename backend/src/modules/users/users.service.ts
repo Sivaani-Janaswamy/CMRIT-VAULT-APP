@@ -1,5 +1,6 @@
 import { ForbiddenError } from '../../common/errors/ForbiddenError';
 import { NotFoundError } from '../../common/errors/NotFoundError';
+import { adminRepository } from '../admin/admin.repository';
 import type {
   AdminUsersPage,
   AdminUsersQuery,
@@ -61,6 +62,14 @@ class UsersService {
       throw new NotFoundError('User not found');
     }
 
+    await adminRepository.logAction({
+      actorId: userId,
+      action: 'admin.user.role.updated',
+      entityType: 'user',
+      entityId: targetUserId,
+      metadata: { role }
+    });
+
     return user;
   }
 
@@ -74,6 +83,14 @@ class UsersService {
     if (!user) {
       throw new NotFoundError('User not found');
     }
+
+    await adminRepository.logAction({
+      actorId: userId,
+      action: 'admin.user.status.updated',
+      entityType: 'user',
+      entityId: targetUserId,
+      metadata: { isActive }
+    });
 
     return user;
   }

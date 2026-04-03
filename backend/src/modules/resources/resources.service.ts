@@ -1,6 +1,7 @@
 import { AppError } from '../../common/errors/AppError';
 import { ForbiddenError } from '../../common/errors/ForbiddenError';
 import { NotFoundError } from '../../common/errors/NotFoundError';
+import { adminRepository } from '../admin/admin.repository';
 import { subjectsRepository } from '../subjects/subjects.repository';
 import { usersRepository } from '../users/users.repository';
 import { resourcesRepository } from './resources.repository';
@@ -197,6 +198,17 @@ class ResourcesService {
     if (!updated) {
       throw new NotFoundError('Resource not found');
     }
+
+    await adminRepository.logAction({
+      actorId: userId,
+      action: 'admin.resource.status.updated',
+      entityType: 'resource',
+      entityId: resourceId,
+      metadata: {
+        fromStatus: resource.status,
+        toStatus: status
+      }
+    });
 
     return updated;
   }

@@ -1,5 +1,6 @@
 import { ForbiddenError } from '../../common/errors/ForbiddenError';
 import { NotFoundError } from '../../common/errors/NotFoundError';
+import { adminRepository } from '../admin/admin.repository';
 import { usersRepository } from '../users/users.repository';
 import { subjectsRepository } from './subjects.repository';
 import type {
@@ -32,7 +33,22 @@ class SubjectsService {
 
   async createSubject(userId: string, input: CreateSubjectInput): Promise<SubjectDetail> {
     await this.requireAdmin(userId);
-    return subjectsRepository.createSubject(input, userId);
+    const subject = await subjectsRepository.createSubject(input, userId);
+    await adminRepository.logAction({
+      actorId: userId,
+      action: 'admin.subject.created',
+      entityType: 'subject',
+      entityId: subject.id,
+      metadata: {
+        code: subject.code,
+        name: subject.name,
+        department: subject.department,
+        semester: subject.semester,
+        isActive: subject.isActive
+      }
+    });
+
+    return subject;
   }
 
   async updateSubject(
@@ -46,6 +62,16 @@ class SubjectsService {
       throw new NotFoundError('Subject not found');
     }
 
+    const metadata: Record<string, unknown> = { ...input };
+
+    await adminRepository.logAction({
+      actorId: userId,
+      action: 'admin.subject.updated',
+      entityType: 'subject',
+      entityId: subjectId,
+      metadata
+    });
+
     return subject;
   }
 
@@ -55,6 +81,14 @@ class SubjectsService {
     if (!subject) {
       throw new NotFoundError('Subject not found');
     }
+
+    await adminRepository.logAction({
+      actorId: userId,
+      action: 'admin.subject.deleted',
+      entityType: 'subject',
+      entityId: subjectId,
+      metadata: { isActive: false }
+    });
 
     return subject;
   }

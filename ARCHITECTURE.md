@@ -241,7 +241,7 @@ any → archived
 | Feature | Scope |
 |---|---|
 | Analytics | Download trends, popular subjects, active content |
-| Admin panel | User management and moderation |
+| Admin panel | Backend admin analytics endpoints implemented; client admin surfaces pending |
 | Audit logs | Security and operational tracing |
 | Web frontend | Next.js reusing the same API |
 
@@ -318,11 +318,12 @@ Any new feature should reuse these contracts instead of introducing parallel con
 
 | Area | Current State |
 |---|---|
-| Backend | Node.js API scaffold exists with auth, users, subjects, resources, downloads, search, and faculty modules |
+| Backend | Node.js API scaffold exists with auth, users, subjects, resources, downloads, search, faculty, and admin modules |
 | Mobile | Flutter app scaffold exists with Supabase auth bootstrap and routing |
 | Schema reference | `DATABASE_DESIGN.md` is the canonical schema file |
 | Search | Algolia-backed read-model implemented; mobile/web search surfaces still planned |
 | Faculty dashboard | Backend faculty endpoints implemented; mobile/web dashboard UI still planned |
+| Admin analytics | Backend admin summary/resources overview/downloads overview endpoints implemented; mobile/web admin UI still planned |
 | Resources and downloads backend modules | Implemented; only client screens and refinements remain |
 | Web frontend | Next.js scaffold exists; production screens and backend integration remain |
 

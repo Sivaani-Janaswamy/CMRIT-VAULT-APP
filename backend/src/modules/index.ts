@@ -1,6 +1,7 @@
 import { Router } from 'express';
 
 import { authRouter } from './auth/auth.routes';
+import { adminRouter } from './admin/admin.routes';
 import { facultyRouter } from './faculty/faculty.routes';
 import { adminDownloadsRouter, downloadsRouter, resourceDownloadsRouter } from './downloads/downloads.routes';
 import { adminSearchRouter, searchRouter } from './search/search.routes';
@@ -11,6 +12,7 @@ import { adminUsersRouter, usersRouter } from './users/users.routes';
 export const modulesRouter = Router();
 
 modulesRouter.use('/auth', authRouter);
+modulesRouter.use('/admin', adminRouter);
 modulesRouter.use('/users', usersRouter);
 modulesRouter.use('/admin/users', adminUsersRouter);
 modulesRouter.use('/admin/subjects', adminSubjectsRouter);
