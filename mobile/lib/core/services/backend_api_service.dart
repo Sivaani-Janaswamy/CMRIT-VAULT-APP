@@ -106,6 +106,21 @@ class BackendApiService {
     );
   }
 
+  Future<Map<String, dynamic>> fetchDownloadsHistory({
+    int page = 1,
+    int pageSize = 20,
+  }) {
+    appLog('BackendApiService.fetchDownloadsHistory(): start');
+    return _request(
+      method: 'GET',
+      path: '/v1/downloads/me',
+      queryParameters: {
+        'page': page.toString(),
+        'pageSize': pageSize.toString(),
+      },
+    );
+  }
+
   Future<Map<String, dynamic>> _request({
     required String method,
     required String path,

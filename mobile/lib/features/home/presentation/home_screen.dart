@@ -73,6 +73,17 @@ class HomeScreen extends ConsumerWidget {
               icon: const Icon(Icons.menu_book),
               label: const Text('Browse Subjects'),
             ),
+            const SizedBox(height: 12),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.highlightOrange,
+                foregroundColor: AppColors.text,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+              onPressed: () => context.go('/downloads'),
+              icon: const Icon(Icons.download),
+              label: const Text('Downloads History'),
+            ),
           ],
         ),
       ),

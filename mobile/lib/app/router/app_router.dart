@@ -10,6 +10,7 @@ import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/signup_screen.dart';
 import '../../features/auth/presentation/splash_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
+import '../../features/downloads/presentation/downloads_screen.dart';
 import '../../features/subjects/domain/subject.dart';
 import '../../features/subjects/presentation/resource_detail_screen.dart';
 import '../../features/subjects/presentation/subject_detail_screen.dart';
@@ -88,6 +89,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           final resourceId = state.pathParameters['resourceId'] ?? '';
           return ResourceDetailScreen(resourceId: resourceId);
         },
+      ),
+      GoRoute(
+        path: '/downloads',
+        builder: (context, state) => const DownloadsScreen(),
       ),
     ],
     errorBuilder: (context, state) {
