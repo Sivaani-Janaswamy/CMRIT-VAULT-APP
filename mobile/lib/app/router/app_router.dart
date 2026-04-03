@@ -9,6 +9,7 @@ import '../../features/auth/domain/auth_state.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/signup_screen.dart';
 import '../../features/auth/presentation/splash_screen.dart';
+import '../../features/search/presentation/search_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/downloads/presentation/downloads_screen.dart';
 import '../../features/subjects/domain/subject.dart';
@@ -93,6 +94,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/downloads',
         builder: (context, state) => const DownloadsScreen(),
+      ),
+      GoRoute(
+        path: '/search',
+        builder: (context, state) => const SearchScreen(),
       ),
     ],
     errorBuilder: (context, state) {

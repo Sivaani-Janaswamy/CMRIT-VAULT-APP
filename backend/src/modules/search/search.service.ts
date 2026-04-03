@@ -113,6 +113,21 @@ class SearchService {
     return algoliaIntegration.buildSearchIndexRecord(resource, subject);
   }
 
+  async syncResourceIndex(resourceId: string): Promise<void> {
+    const resource = await searchRepository.fetchResourceById(resourceId);
+    if (!resource) {
+      throw new NotFoundError('Resource not found');
+    }
+
+    const subject = await searchRepository.fetchSubjectById(resource.subject_id);
+    if (!subject) {
+      throw new NotFoundError('Subject not found');
+    }
+
+    const record = this.mapResourceRowToIndexRecord(resource, subject);
+    await algoliaIntegration.reindexResource(record);
+  }
+
   async searchResources(userId: string, input: SearchQueryInput): Promise<SearchPage> {
     const currentUser = await this.requireAccess(userId);
     const result = await algoliaIntegration.searchResources({
@@ -180,18 +195,7 @@ class SearchService {
       throw new ForbiddenError('Admin access required');
     }
 
-    const resource = await searchRepository.fetchResourceById(resourceId);
-    if (!resource) {
-      throw new NotFoundError('Resource not found');
-    }
-
-    const subject = await searchRepository.fetchSubjectById(resource.subject_id);
-    if (!subject) {
-      throw new NotFoundError('Subject not found');
-    }
-
-    const record = this.mapResourceRowToIndexRecord(resource, subject);
-    await algoliaIntegration.reindexResource(record);
+    await this.syncResourceIndex(resourceId);
     return {
       jobId: randomUUID(),
       status: 'completed'

@@ -1,7 +1,9 @@
 import { AppError } from '../../common/errors/AppError';
 import { ForbiddenError } from '../../common/errors/ForbiddenError';
 import { NotFoundError } from '../../common/errors/NotFoundError';
+import { logDebug } from '../../common/utils/logger';
 import { adminRepository } from '../admin/admin.repository';
+import { searchService } from '../search/search.service';
 import { subjectsRepository } from '../subjects/subjects.repository';
 import { usersRepository } from '../users/users.repository';
 import { resourcesRepository } from './resources.repository';
@@ -27,6 +29,20 @@ interface CreatedResourceResult {
 }
 
 class ResourcesService {
+  private async syncSearchIndex(resourceId: string, action: string): Promise<void> {
+    try {
+      await searchService.syncResourceIndex(resourceId);
+      logDebug('Search index sync success', { resourceId, action });
+    } catch (error) {
+      // Search is a read model; primary resource writes should remain available.
+      logDebug('Search index sync skipped', {
+        resourceId,
+        action,
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  }
+
   private async requireAccess(userId: string) {
     const currentUser = await usersRepository.findAccessContextById(userId);
     if (!currentUser || !currentUser.isActive) {
@@ -89,6 +105,8 @@ class ResourcesService {
       expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString()
     };
 
+    await this.syncSearchIndex(resource.id, 'resource.create');
+
     return {
       resource,
       uploadSession
@@ -115,6 +133,8 @@ class ResourcesService {
       throw new NotFoundError('Resource not found');
     }
 
+    await this.syncSearchIndex(updated.id, 'resource.update');
+
     return updated;
   }
 
@@ -133,6 +153,8 @@ class ResourcesService {
     if (!updated) {
       throw new NotFoundError('Resource not found');
     }
+
+    await this.syncSearchIndex(updated.id, 'resource.complete');
 
     return updated;
   }
@@ -153,6 +175,8 @@ class ResourcesService {
       throw new NotFoundError('Resource not found');
     }
 
+    await this.syncSearchIndex(updated.id, 'resource.submit');
+
     return updated;
   }
 
@@ -171,6 +195,8 @@ class ResourcesService {
     if (!updated) {
       throw new NotFoundError('Resource not found');
     }
+
+    await this.syncSearchIndex(updated.id, 'resource.archive');
 
     return updated;
   }
@@ -209,6 +235,8 @@ class ResourcesService {
         toStatus: status
       }
     });
+
+    await this.syncSearchIndex(updated.id, 'admin.resource.status.update');
 
     return updated;
   }

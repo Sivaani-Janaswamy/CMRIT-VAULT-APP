@@ -121,6 +121,23 @@ class BackendApiService {
     );
   }
 
+  Future<Map<String, dynamic>> searchResources({
+    required String query,
+    int page = 1,
+    int pageSize = 20,
+  }) {
+    appLog('BackendApiService.searchResources(): start query="$query"');
+    return _request(
+      method: 'GET',
+      path: '/v1/search/resources',
+      queryParameters: {
+        'q': query,
+        'page': page.toString(),
+        'pageSize': pageSize.toString(),
+      },
+    );
+  }
+
   Future<Map<String, dynamic>> _request({
     required String method,
     required String path,
