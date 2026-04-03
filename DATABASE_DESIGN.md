@@ -13,6 +13,7 @@ Use this file to verify schema assumptions in backend, mobile, and future web co
 | `subjects` | Academic subject catalog |
 | `resources` | Notes, question papers, and faculty uploads |
 | `downloads` | Download audit trail |
+| `audit_logs` | Admin and moderation audit trail |
 
 ## Core Design Rules
 
@@ -182,6 +183,30 @@ Use this file to verify schema assumptions in backend, mobile, and future web co
 | `idx_downloads_downloaded_at` | Recent downloads |
 | `idx_downloads_user_downloaded_at` | User-specific recent downloads |
 
+## `audit_logs`
+
+| Column | Type | Constraints / Notes |
+|---|---|---|
+| `id` | uuid | Primary key |
+| `actor_id` | uuid | FK to `users(id)`, `ON DELETE SET NULL` to preserve history |
+| `action` | text | Required, audit action name |
+| `entity_type` | text | Required, target entity type |
+| `entity_id` | uuid | Required, target entity UUID |
+| `metadata` | jsonb | Optional structured context |
+| `created_at` | timestamptz | Default `now()` |
+
+### Indexes
+
+| Index | Purpose |
+|---|---|
+| `idx_audit_logs_actor_id` | Actor drill-down |
+| `idx_audit_logs_entity_type_entity_id` | Entity drill-down |
+| `idx_audit_logs_action` | Action-based filtering |
+| `idx_audit_logs_created_at_desc` | Recent-first timelines |
+| `idx_audit_logs_actor_created_at_desc` | Actor timeline views |
+| `idx_audit_logs_entity_created_at_desc` | Entity timeline views |
+| `idx_audit_logs_action_created_at_desc` | Action timeline views |
+
 ## Row Level Security
 
 | Table | RLS Policy Model |
@@ -191,6 +216,7 @@ Use this file to verify schema assumptions in backend, mobile, and future web co
 | `subjects` | Readable by authenticated users; writable by admin only |
 | `resources` | Public-to-auth logic via authenticated role checks and ownership |
 | `downloads` | Self read plus admin access; insert only when resource is viewable |
+| `audit_logs` | Admin read only; backend service role handles writes |
 
 ## Helper Functions
 
@@ -229,6 +255,7 @@ erDiagram
     USERS ||--o{ RESOURCES : uploads
     USERS ||--o{ DOWNLOADS : performs
     RESOURCES ||--o{ DOWNLOADS : records
+    USERS ||--o{ AUDIT_LOGS : acts
 
     ROLES {
         smallint id PK
@@ -291,6 +318,16 @@ erDiagram
         text ip_hash
         text user_agent
         timestamptz downloaded_at
+    }
+
+    AUDIT_LOGS {
+        uuid id PK
+        uuid actor_id FK
+        text action
+        text entity_type
+        uuid entity_id
+        jsonb metadata
+        timestamptz created_at
     }
 ```
 
