@@ -120,7 +120,7 @@ Faculty endpoint note: `/v1/faculty/*` may include faculty-owned archived resour
 | Notes list/detail | `/v1/resources`, `/v1/resources/:id` | ✅ | Resource list and detail screen implemented |
 | Downloads history | `/v1/downloads/me` | ✅ | Read-only history list implemented |
 | Search screen | `/v1/search/resources` | ❌ | Not implemented |
-| Download action (resource detail) | `POST /v1/resources/:id/download-url` | ⚠️ | Signed URL request works; current UX copies URL to clipboard and shows dialog (no native/open-in-app download yet) |
+| Download action (resource detail) | `POST /v1/resources/:id/download-url` | ✅ | Signed URL request opens natively; clipboard fallback remains for devices that cannot launch the URL |
 | Faculty dashboard | `/v1/faculty/*` | ⚠️ | Backend faculty endpoints are implemented; client dashboard screens remain missing |
 | Admin panel | `/v1/admin/*` | ❌ | Not implemented |
 
@@ -129,10 +129,10 @@ Faculty endpoint note: `/v1/faculty/*` may include faculty-owned archived resour
 | Area | Status | Notes |
 | --- | --- | --- |
 | Riverpod state management | ✅ | Auth controller and providers exist |
-| `go_router` navigation | ✅ | Splash -> Login -> Signup -> Home + Subjects + Resource detail |
+| `go_router` navigation | ✅ | Splash -> Login -> Signup -> Home + Subjects + Resource detail + Downloads |
 | Supabase bootstrap | ✅ | Initialized in app startup |
-| Backend API client | ✅ | Thin HTTP wrapper exists and includes subjects/resources/download-url methods |
-| Feature-based structure | ⚠️ | Auth, home, and subjects/resources are organized; search/download-history/admin/faculty client modules remain |
+| Backend API client | ✅ | Thin HTTP wrapper exists and includes subjects/resources/download-url/downloads-history methods |
+| Feature-based structure | ⚠️ | Auth, home, subjects/resources, and downloads-history are organized; search/admin/faculty client modules remain |
 
 ## 5. Frontend (Web)
 
@@ -161,7 +161,7 @@ Faculty endpoint note: `/v1/faculty/*` may include faculty-owned archived resour
 | Users profile | ✅ | ❌ | ❌ | Web profile flow missing |
 | Subjects browsing | ✅ | ✅ | ❌ | Mobile subject list + subject resource browsing are implemented |
 | Resources lifecycle | ✅ | ⚠️ | ❌ | Backend lifecycle is complete; mobile has list/detail browsing, but upload/moderation client flows are pending |
-| Downloads tracking | ✅ | ⚠️ | ❌ | Backend endpoints are implemented; mobile history screen is implemented, but native open/download UX remains pending |
+| Downloads tracking | ✅ | ✅ | ❌ | Backend endpoints are implemented; mobile history and native open/download UX are implemented; web history remains pending |
 | Search | ✅ | ❌ | ❌ | Backend Algolia search is implemented; mobile/web search screens are still missing |
 | Faculty dashboard | ✅ | ❌ | ❌ | ⚠️ Backend faculty endpoints are implemented; client dashboard screens remain missing |
 | Admin panel | ✅ | ❌ | ❌ | ⚠️ Backend admin analytics endpoints are implemented; mobile/web admin UI is still missing |
@@ -173,22 +173,22 @@ Faculty endpoint note: `/v1/faculty/*` may include faculty-owned archived resour
 | --- | --- | --- | --- |
 | Resources module | Backend resources lifecycle exists; mobile browsing is now implemented, but web resource browsing is still missing | Web users cannot browse content yet | Add web resource browsing and detail flows |
 | Downloads module | Backend downloads slice is implemented; mobile history screen exists, but web history UX is still missing | Users cannot access history from all clients yet | Add web downloads history screen and integration |
-| Download UX | Mobile currently returns and copies signed URL only | Users cannot complete download directly from app UX | Implement native URL launch/file-open flow and handle expiry/errors gracefully |
+| Download UX | Mobile now opens signed URLs natively with clipboard fallback when device launch fails | Fallback/error messaging can still be improved | Keep native-first behavior and refine user-facing failure messaging |
 | Search client surfaces | Backend Algolia search exists, but mobile/web search screens are missing | No discovery UX in clients | Add search screens, filters, and suggestion UI |
 | Admin module | Dedicated admin module now exists for analytics overviews; client admin surfaces are still missing | Admin operations are backend-ready but not yet user-facing in clients | Implement mobile/web admin screens and workflows |
 | Web backend integration | Next.js exists but is still starter-only | Web cannot consume auth/profile APIs yet | Add typed backend client and auth bootstrap flow |
-| Mobile content browsing | Subjects/resources browsing is implemented, but downloads/search/history are incomplete | Core browsing works, but discovery and consumption are still partial | Implement download completion UX, download history, and search screens next |
+| Mobile content browsing | Subjects/resources browsing and downloads history are implemented; search is still missing | Core browsing and download consumption work, but discovery is still partial | Implement search screens next |
 | API contract coverage | Auth/users/subjects/resources/downloads/faculty/search/admin backend endpoints are implemented | Endpoint surface is still incomplete for client search and client-facing dashboard/admin flows | Prioritize client search and client dashboard/admin surfaces next |
 
 ## 8. Technical Debt
 
 | Area | Issue | Risk | Fix |
 | --- | --- | --- | --- |
-| Mobile feature depth | Subjects/resources browsing is implemented; downloads/search/history/admin/faculty are still pending | Feature growth can become uneven across client roles | Continue feature folders for downloads/search/faculty/admin with same patterns |
+| Mobile feature depth | Subjects/resources browsing and downloads history are implemented; search/admin/faculty are still pending | Feature growth can become uneven across client roles | Continue feature folders for search/faculty/admin with same patterns |
 | Web app state | Starter Next.js page still shows template content | Production confusion and weak brand identity | Replace starter page with CMRIT Vault app shell and auth-aware layout |
 | Backend module surface | Core backend modules including admin are implemented | Remaining risk is client adoption and operational hardening | Focus on client integration + production hardening |
 | Shared API contracts | No shared API DTO package between mobile and web | Drift risk across clients | Introduce a stable response/types layer if needed later |
-| Content lifecycle | Mobile browsing is in place, but download completion/search/admin flows are incomplete | UX remains partially end-to-end | Build download completion + search + admin client slices next |
+| Content lifecycle | Mobile browsing plus native download flow are in place, but search/admin flows are incomplete | UX remains partially end-to-end | Build search + admin client slices next |
 
 ## 9. Production Risks
 
@@ -196,7 +196,7 @@ Faculty endpoint note: `/v1/faculty/*` may include faculty-owned archived resour
 | --- | --- | --- | --- |
 | Schema drift | Backend DB access | High | Keep code aligned to `DATABASE_DESIGN.md` and review queries against the schema |
 | Starter frontend exposure | Web | Medium | Replace template UI before user-facing release |
-| Download completion UX gap | Mobile | Medium | Replace clipboard-only URL handling with native/open flow + expiry handling |
+| Download fallback UX gap | Mobile | Low | Improve fallback and error messages when automatic URL launch is unavailable |
 | Download history UX gap | Mobile/Web | Medium | Implement web downloads history and signed URL consumption flows |
 | Client search UX gap | Mobile/Web | Medium | Add search screens and connect them to the backend search APIs |
 | Incomplete admin controls | Mobile/Web | Medium | Build admin client screens over already available backend admin endpoints |
@@ -281,7 +281,7 @@ Faculty endpoint note: `/v1/faculty/*` may include faculty-owned archived resour
 | --- | --- | --- | --- |
 | 1 | ✅ Implement downloads module | Backend | Completed and validated |
 | 2 | ✅ Add mobile subject/resource browsing flow | Mobile | Completed and manually validated on emulator |
-| 3 | Implement native download completion UX from resource detail | Mobile | Current clipboard-only URL handling is not sufficient for expected download behavior |
+| 3 | ✅ Implement native download completion UX from resource detail | Mobile | Signed URLs now open natively with a clipboard fallback |
 | 4 | Add search client surfaces | Mobile/Web | Backend search is implemented; client discovery UX is the remaining gap |
 | 5 | Replace Next.js starter page and add landing/auth shell | Web | Landing/home surfaces are still missing |
 | 6 | Build admin client surfaces | Mobile/Web | Backend admin module is ready; user-facing admin workflows are pending |
@@ -296,7 +296,7 @@ Faculty endpoint note: `/v1/faculty/*` may include faculty-owned archived resour
 | 3 | ✅ Build resources module (full lifecycle + storage) | Backend | Core product |
 | 4 | ✅ Build downloads module | Backend | Completed and validated |
 | 5 | ✅ Implement mobile subject + resource browsing | Mobile | Implemented and tested |
-| 6 | Implement native download completion UX (open/download file from signed URL) | Mobile | Current clipboard-only behavior blocks expected downloads |
+| 6 | ✅ Implement native download completion UX (open/download file from signed URL) | Mobile | Signed URLs now open natively with a clipboard fallback |
 | 7 | Implement search client surfaces | Mobile/Web | Search backend is in place; client search UX still needs to be built |
 | 8 | Replace Next.js starter UI with landing/auth shell + API client bootstrap | Web | Home/landing surfaces are still missing |
 | 9 | Build admin client panel | Mobile/Web | Backend admin APIs exist; client integration is the remaining work |
@@ -312,6 +312,6 @@ When redesign work is scheduled, include these requirements:
 | --- | --- | --- |
 | Web landing | Build a proper landing/home experience (replace Next.js starter template) | High |
 | Mobile home | Expand home from utility entry screen to role-aware dashboard sections (student/faculty/admin quick actions) | Medium |
-| Download UX | Replace clipboard-only signed URL flow with direct open/download UX and clear expiry messaging | High |
+| Download UX | Keep native open/download flow and improve fallback/error messaging for launch failures and expired links | Medium |
 | Empty/error states | Keep current simple states, but add contextual actions (retry, back, open settings) | Medium |
 | Design system | Consolidate colors/typography/components into a reusable token + component pattern across screens | Medium |
