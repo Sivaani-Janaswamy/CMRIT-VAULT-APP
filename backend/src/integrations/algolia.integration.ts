@@ -1,11 +1,12 @@
 import { env } from '../config/env';
-import type { ResourceStatus, ResourceType } from '../modules/resources/resources.types';
 import type {
+  ResourceStatus,
+  ResourceType,
   SearchIndexRecord,
   SearchResourceRow,
   SearchSubjectRow,
   SearchSuggestItem
-} from '../modules/search/search.types';
+} from '../common/types/search-contracts';
 
 interface AlgoliaConfig {
   appId: string;

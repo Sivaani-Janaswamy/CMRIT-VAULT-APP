@@ -1,5 +1,5 @@
 import { supabaseServiceClient } from '../../integrations/supabase/client';
-import type { SearchResourceRow, SearchSubjectRow } from './search.types';
+import type { SearchResourceRow, SearchSubjectRow } from '../../common/types/search-contracts';
 
 interface ResourceBatch {
   rows: SearchResourceRow[];

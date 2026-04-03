@@ -3,19 +3,21 @@ import { randomUUID } from 'node:crypto';
 import { ForbiddenError } from '../../common/errors/ForbiddenError';
 import { NotFoundError } from '../../common/errors/NotFoundError';
 import { algoliaIntegration } from '../../integrations/algolia.integration';
+import type {
+  SearchIndexRecord,
+  SearchResourceRow,
+  SearchSubjectRow,
+  SearchSuggestItem
+} from '../../common/types/search-contracts';
 import { canViewResource } from '../resources/resources.utils';
 import { usersRepository } from '../users/users.repository';
 import { searchRepository } from './search.repository';
 import type {
   SearchFilters,
-  SearchIndexRecord,
   SearchPage,
   SearchQueryInput,
   SearchReindexResult,
   SearchResourceItem,
-  SearchResourceRow,
-  SearchSubjectRow,
-  SearchSuggestItem,
   SearchSuggestQueryInput
 } from './search.types';
 
