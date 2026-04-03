@@ -12,11 +12,11 @@ Legend:
 | Module | File/Folder | Exists? | Notes |
 | --- | --- | --- | --- |
 | App bootstrap | `backend/src/app.ts`, `backend/src/server.ts` | ✅ | Express app, middleware chain, health route |
-| Config | `backend/src/config/env.ts` | ✅ | Env loading for Supabase URL and service role key |
+| Config | `backend/src/config/env.ts` | ✅ | Env loading for Supabase and Algolia runtime configuration |
 | Supabase integration | `backend/src/integrations/supabase/client.ts` | ✅ | Service role client exists |
 | Common errors | `backend/src/common/errors/*` | ✅ | AppError, Unauthorized, Forbidden, NotFound |
 | Common middleware | `backend/src/common/middleware/*` | ✅ | Auth, validation, request logging, error handling, not found |
-| Common types | `backend/src/common/types/*` | ✅ | User and authenticated request types |
+| Common types | `backend/src/common/types/*` | ✅ | User/authenticated request types plus shared search contracts (`search-contracts.ts`) |
 | Common utils | `backend/src/common/utils/logger.ts` | ✅ | Debug logger exists |
 | Auth module | `backend/src/modules/auth/*` | ✅ | Sync profile flow implemented |
 | Users module | `backend/src/modules/users/*` | ✅ | `/v1/users/me` + admin user management endpoints implemented |
@@ -25,7 +25,7 @@ Legend:
 | Downloads module | `backend/src/modules/downloads/*` | ✅ | Signed URL + download history/audit endpoints implemented |
 | Search module | `backend/src/modules/search/*` | ✅ | Algolia-backed search, suggestions, and admin reindex endpoints implemented; env vars: `ALGOLIA_APP_ID`, `ALGOLIA_SEARCH_KEY`, `ALGOLIA_ADMIN_KEY`, `ALGOLIA_SEARCH_HOST`, `ALGOLIA_ADMIN_HOST`, `ALGOLIA_INDEX_NAME` |
 | Admin module | `backend/src/modules/admin/*` | ❌ | Not present |
-| Module router | `backend/src/modules/index.ts` | ✅ | Wires auth, users, admin-users, subjects, admin-subjects, resources, admin-resources, resource-downloads, downloads, admin-downloads routers |
+| Module router | `backend/src/modules/index.ts` | ✅ | Wires auth, users, admin-users, subjects, admin-subjects, resources, admin-resources, resource-downloads, downloads, admin-downloads, search, and admin-search routers |
 
 ## 2. API Endpoints
 
@@ -240,7 +240,7 @@ Clients cannot directly set status on creation.
 | Entry | `src/app.ts`, `src/server.ts` |
 | Config | `src/config/*` |
 | Common | `src/common/errors`, `src/common/middleware`, `src/common/utils`, `src/common/types` |
-| Integrations | `src/integrations/supabase`, `src/integrations/algolia` |
+| Integrations | `src/integrations/supabase`, `src/integrations/algolia.integration.ts` |
 | Modules | `src/modules/auth`, `src/modules/users`, `src/modules/subjects`, `src/modules/resources`, `src/modules/downloads`, `src/modules/search`, `src/modules/admin` |
 | Tests | `tests/` or module-local tests |
 

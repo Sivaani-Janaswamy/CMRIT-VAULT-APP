@@ -316,7 +316,7 @@ Any new feature should reuse these contracts instead of introducing parallel con
 
 | Area | Current State |
 |---|---|
-| Backend | Node.js API scaffold exists with auth, users, and subjects modules |
+| Backend | Node.js API scaffold exists with auth, users, subjects, resources, downloads, and search modules |
 | Mobile | Flutter app scaffold exists with Supabase auth bootstrap and routing |
 | Schema reference | `DATABASE_DESIGN.md` is the canonical schema file |
 | Search | Algolia-backed read-model implemented; mobile/web search surfaces still planned |
