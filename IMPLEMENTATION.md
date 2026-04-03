@@ -22,10 +22,10 @@ Legend:
 | Users module | `backend/src/modules/users/*` | ✅ | `/v1/users/me` + admin user management endpoints implemented |
 | Subjects module | `backend/src/modules/subjects/*` | ✅ | Subject list/detail + admin CRUD endpoints implemented |
 | Resources module | `backend/src/modules/resources/*` | ✅ | Full lifecycle + moderation endpoint implemented |
-| Downloads module | `backend/src/modules/downloads/*` | ❌ | Not present |
+| Downloads module | `backend/src/modules/downloads/*` | ✅ | Signed URL + download history/audit endpoints implemented |
 | Search module | `backend/src/modules/search/*` | ❌ | Not present |
 | Admin module | `backend/src/modules/admin/*` | ❌ | Not present |
-| Module router | `backend/src/modules/index.ts` | ✅ | Wires auth, users, admin-users, subjects, admin-subjects, resources, admin-resources routers |
+| Module router | `backend/src/modules/index.ts` | ✅ | Wires auth, users, admin-users, subjects, admin-subjects, resources, admin-resources, resource-downloads, downloads, admin-downloads routers |
 
 ## 2. API Endpoints
 
@@ -52,9 +52,9 @@ Legend:
 | `POST /v1/resources/:id/submit` | Resources | ✅ | Submit-to-review transition implemented |
 | `DELETE /v1/resources/:id` | Resources | ✅ | Soft archive implemented |
 | `PATCH /v1/admin/resources/:id/status` | Resources/Admin | ✅ | Admin moderation transition implemented |
-| `POST /v1/resources/:id/download-url` | Resources/Downloads | ❌ | Download URL flow still belongs to the downloads slice |
-| `GET /v1/downloads/me` | Downloads | ❌ | Missing module |
-| `GET /v1/admin/downloads` | Downloads/Admin | ❌ | Missing module |
+| `POST /v1/resources/:id/download-url` | Resources/Downloads | ✅ | Signed download URL creation + audit logging implemented |
+| `GET /v1/downloads/me` | Downloads | ✅ | Caller-scoped download history with filters implemented |
+| `GET /v1/admin/downloads` | Downloads/Admin | ✅ | Admin audit history with filters implemented |
 | `GET /v1/search/resources` | Search | ❌ | Missing module |
 | `GET /v1/search/suggest` | Search | ❌ | Missing module |
 | `POST /v1/admin/search/reindex` | Search/Admin | ❌ | Missing module |
@@ -97,7 +97,7 @@ Clients cannot directly set status on creation.
 | `users` | `backend/src/modules/auth/auth.repository.ts`, `backend/src/modules/users/users.repository.ts` | ✅ | Role resolution uses `role_id` + `roles.code` |
 | `subjects` | `backend/src/modules/subjects/subjects.repository.ts` | ✅ | Active-list + detail + admin CRUD repository implemented |
 | `resources` | `backend/src/modules/resources/*` | ✅ | Repository and service implemented |
-| `downloads` | `backend/src/modules/downloads/*` | ❌ | Missing |
+| `downloads` | `backend/src/modules/downloads/*` | ✅ | Repository/service/routes implemented |
 | `user_subject_access` | Not implemented | ❌ | Planned only |
 | `audit_logs` | Not implemented | ❌ | Planned only |
 
@@ -154,7 +154,7 @@ Clients cannot directly set status on creation.
 | Users profile | ✅ | ❌ | ❌ | Web profile flow missing |
 | Subjects browsing | ✅ | ❌ | ❌ | Backend subject list/detail/admin CRUD are implemented |
 | Resources lifecycle | ✅ | ❌ | ❌ | ⚠️ Backend lifecycle and moderation are implemented; clients still need content screens |
-| Downloads tracking | ❌ | ❌ | ❌ | Not implemented yet |
+| Downloads tracking | ✅ | ❌ | ❌ | ⚠️ Backend endpoints are implemented; client screens still missing |
 | Search | ❌ | ❌ | ❌ | Not implemented yet |
 | Faculty dashboard | ❌ | ❌ | ❌ | Not implemented yet |
 | Admin panel | ❌ | ❌ | ❌ | Not implemented yet |
@@ -165,12 +165,12 @@ Clients cannot directly set status on creation.
 | Area | Problem | Impact | Recommendation |
 | --- | --- | --- | --- |
 | Resources module | Backend resources lifecycle exists, but mobile/web resource browsing is still missing | Users cannot browse content in client apps yet | Add mobile/web resource browsing and detail flows |
-| Downloads module | Download logging and history are absent | No audit trail or usage analytics | Add `downloads` module and connect it to signed download flow |
+| Downloads module | Backend downloads slice is implemented; mobile/web history UX is still missing | Users cannot access history from clients yet | Add mobile/web downloads history screens and integration |
 | Search module | Algolia integration is missing | No fast discovery or subject-based search | Add search indexing sync after resource publish/update |
 | Admin module | No dedicated admin module yet; only admin user-management endpoints exist inside users module | Content governance is still incomplete for resources/downloads/search | Implement full admin module after MVP content flow |
 | Web backend integration | Next.js exists but is still starter-only | Web cannot consume auth/profile APIs yet | Add typed backend client and auth bootstrap flow |
 | Mobile content browsing | Flutter covers auth only | Users cannot browse content in app | Add subjects/resources/downloads screens and repositories |
-| API contract coverage | Auth/users/subjects are implemented, including admin user management and subjects CRUD endpoints | Endpoint surface is still incomplete for content lifecycle | Prioritize resources/downloads endpoints before UI expansion |
+| API contract coverage | Auth/users/subjects/resources/downloads are implemented | Endpoint surface is still incomplete for search/faculty/admin analytics flows | Prioritize search and admin/faculty dashboard endpoints next |
 
 ## 8. Technical Debt
 
@@ -178,7 +178,7 @@ Clients cannot directly set status on creation.
 | --- | --- | --- | --- |
 | Mobile feature depth | Auth flow exists but feature modules stop at home | Feature growth becomes ad hoc | Add feature folders for subjects/resources/downloads/search |
 | Web app state | Starter Next.js page still shows template content | Production confusion and weak brand identity | Replace starter page with CMRIT Vault app shell and auth-aware layout |
-| Backend module surface | Missing downloads/search/admin modules | Prevents MVP completion | Implement modules in the planned order |
+| Backend module surface | Missing search/admin modules | Prevents MVP completion | Implement modules in the planned order |
 | Shared API contracts | No shared API DTO package between mobile and web | Drift risk across clients | Introduce a stable response/types layer if needed later |
 | Content lifecycle | Client content flows are incomplete even though backend resources lifecycle exists | Upload/download/search cannot be end-to-end | Build client browsing and downstream slices next |
 
@@ -188,7 +188,7 @@ Clients cannot directly set status on creation.
 | --- | --- | --- | --- |
 | Schema drift | Backend DB access | High | Keep code aligned to `DATABASE_DESIGN.md` and review queries against the schema |
 | Starter frontend exposure | Web | Medium | Replace template UI before user-facing release |
-| Missing download tracking | Backend | High | Implement downloads module before content launch |
+| Download history UX gap | Mobile/Web | Medium | Implement client downloads history and signed URL consumption flows |
 | Missing search | Backend + frontend | Medium | Add Algolia indexing and search UI in phase 3 |
 | Incomplete admin controls | Backend | Medium | Build moderation and user management before scaling to large usage |
 | Auth bootstrap regressions | Mobile | High | Preserve loading/error states and keep auth sync idempotent |
@@ -203,7 +203,7 @@ Clients cannot directly set status on creation.
 | Users | ✅ Completed (self update + admin list/detail/role/status) | Auth + normalized role model |
 | Subjects | ✅ Completed (list/detail + admin create/update/delete) | Backend service/repository expansion |
 | Resources module | ✅ Full lifecycle + moderation completed | Supabase Storage + DB schema + role checks |
-| Downloads module | Logging and history | Resources + signed download URLs |
+| Downloads module | ✅ Logging and history completed | Resources + signed download URLs |
 
 ### Phase 2: Usability
 
@@ -270,7 +270,7 @@ Clients cannot directly set status on creation.
 
 | Priority | Task | Area | Why it matters |
 | --- | --- | --- | --- |
-| 1 | Implement downloads module | Backend | Needed for tracking, history, and compliance |
+| 1 | ✅ Implement downloads module | Backend | Completed and validated |
 | 2 | Replace Next.js starter page | Web | Current UI is only template content |
 | 3 | Add web backend client and auth flow | Web | Required for future production use |
 | 4 | Add content browsing screens to mobile | Mobile | Mobile app is auth-only right now |
@@ -285,7 +285,7 @@ Clients cannot directly set status on creation.
 | 1 | ✅ Complete user endpoints (`PATCH /users/me`, admin list/detail/role/status) | Backend | Completed and validated |
 | 2 | ✅ Complete subject CRUD (`GET/:id`, create/update/delete) | Backend | Completed and validated |
 | 3 | ✅ Build resources module (full lifecycle + storage) | Backend | Core product |
-| 4 | Build downloads module | Backend | Required for tracking |
+| 4 | ✅ Build downloads module | Backend | Completed and validated |
 | 5 | Implement mobile subject + resource browsing | Mobile | Uses backend APIs |
 | 6 | Replace Next.js starter UI with app shell | Web | Clean UI foundation |
 | 7 | Add web API client + auth integration | Web | Connect frontend to backend |

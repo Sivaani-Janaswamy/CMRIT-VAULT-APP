@@ -4,6 +4,7 @@ import { NotFoundError } from '../../common/errors/NotFoundError';
 import { subjectsRepository } from '../subjects/subjects.repository';
 import { usersRepository } from '../users/users.repository';
 import { resourcesRepository } from './resources.repository';
+import { canViewResource } from './resources.utils';
 import type {
   CreateResourceInput,
   Resource,
@@ -32,22 +33,6 @@ class ResourcesService {
     }
 
     return currentUser;
-  }
-
-  private canViewResource(
-    resource: Resource,
-    userId: string,
-    role: 'student' | 'faculty' | 'admin'
-  ): boolean {
-    if (role === 'admin') {
-      return true;
-    }
-
-    if (role === 'faculty') {
-      return resource.status !== 'archived' && (resource.status === 'published' || resource.uploadedBy === userId);
-    }
-
-    return resource.status === 'published';
   }
 
   private canModifyResource(
@@ -81,7 +66,7 @@ class ResourcesService {
       throw new NotFoundError('Resource not found');
     }
 
-    if (!this.canViewResource(resource, currentUser.id, currentUser.role)) {
+    if (!canViewResource(currentUser.role, { status: resource.status, ownerId: resource.uploadedBy }, currentUser.id)) {
       throw new NotFoundError('Resource not found');
     }
 

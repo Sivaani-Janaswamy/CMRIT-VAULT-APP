@@ -9,7 +9,7 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "lint": "tsc --noEmit",
-    "test": "node --test -r ts-node/register/transpile-only tests/users.routes.test.ts tests/subjects.routes.test.ts tests/resources.routes.test.ts"
+    "test": "node --test -r ts-node/register/transpile-only tests/users.routes.test.ts tests/subjects.routes.test.ts tests/resources.routes.test.ts tests/downloads.routes.test.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",
