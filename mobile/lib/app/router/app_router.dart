@@ -7,6 +7,7 @@ import '../../core/utils/app_logger.dart';
 import '../../features/auth/application/auth_controller.dart';
 import '../../features/auth/domain/auth_state.dart';
 import '../../features/auth/presentation/login_screen.dart';
+import '../../features/auth/presentation/profile_edit_screen.dart';
 import '../../features/auth/presentation/signup_screen.dart';
 import '../../features/auth/presentation/splash_screen.dart';
 import '../../features/admin/presentation/admin_access_denied_view.dart';
@@ -15,11 +16,14 @@ import '../../features/admin/presentation/admin_downloads_overview_screen.dart';
 import '../../features/admin/presentation/admin_resources_overview_screen.dart';
 import '../../features/faculty/presentation/faculty_access_denied_view.dart';
 import '../../features/faculty/presentation/faculty_dashboard_screen.dart';
+import '../../features/faculty/presentation/faculty_resource_form_screen.dart';
+import '../../features/faculty/presentation/faculty_resource_stats_screen.dart';
 import '../../features/faculty/presentation/faculty_resources_screen.dart';
 import '../../features/search/presentation/search_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/downloads/presentation/downloads_screen.dart';
 import '../../features/subjects/domain/subject.dart';
+import '../../features/subjects/domain/resource_item.dart';
 import '../../features/subjects/presentation/resource_detail_screen.dart';
 import '../../features/subjects/presentation/subject_detail_screen.dart';
 import '../../features/subjects/presentation/subject_list_screen.dart';
@@ -75,6 +79,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/home',
         builder: (context, state) => const HomeScreen(),
+      ),
+      GoRoute(
+        path: '/profile/edit',
+        builder: (context, state) => const ProfileEditScreen(),
       ),
       GoRoute(
         path: '/subjects',
@@ -175,6 +183,44 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           }
           return allowed
               ? const FacultyResourcesScreen()
+              : const FacultyAccessDeniedView();
+        },
+      ),
+      GoRoute(
+        path: '/faculty/resources/new',
+        builder: (context, state) {
+          final role = authState.user?.role;
+          final allowed = role == 'faculty' || role == 'admin';
+          return allowed
+              ? const FacultyResourceFormScreen()
+              : const FacultyAccessDeniedView();
+        },
+      ),
+      GoRoute(
+        path: '/faculty/resources/:resourceId/edit',
+        builder: (context, state) {
+          final role = authState.user?.role;
+          final allowed = role == 'faculty' || role == 'admin';
+          final resourceId = state.pathParameters['resourceId'] ?? '';
+          final initialResource = state.extra is ResourceItem
+              ? state.extra as ResourceItem
+              : null;
+          return allowed
+              ? FacultyResourceFormScreen(
+                  resourceId: resourceId,
+                  initialResource: initialResource,
+                )
+              : const FacultyAccessDeniedView();
+        },
+      ),
+      GoRoute(
+        path: '/faculty/resources/:resourceId/stats',
+        builder: (context, state) {
+          final role = authState.user?.role;
+          final allowed = role == 'faculty' || role == 'admin';
+          final resourceId = state.pathParameters['resourceId'] ?? '';
+          return allowed
+              ? FacultyResourceStatsScreen(resourceId: resourceId)
               : const FacultyAccessDeniedView();
         },
       ),

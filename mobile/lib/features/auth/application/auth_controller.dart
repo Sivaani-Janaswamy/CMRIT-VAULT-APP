@@ -6,7 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
 import '../../../core/services/backend_api_service.dart';
 import '../../../core/services/supabase_service.dart';
 import '../../../core/utils/app_logger.dart';
-import '../domain/app_user.dart';
+import '../data/auth_repository.dart';
 import '../domain/auth_state.dart';
 
 final authControllerProvider =
@@ -133,8 +133,7 @@ class AuthController extends Notifier<AuthState> {
       appLog('AuthController._handleSession(): calling /v1/auth/sync');
       await api.syncAuth();
       appLog('AuthController._handleSession(): calling /v1/users/me');
-      final userJson = await api.fetchCurrentUser();
-      final user = AppUser.fromJson(userJson);
+      final user = await ref.read(authRepositoryProvider).fetchCurrentUser();
 
       state = AuthState.authenticated(
         session: session,
@@ -161,5 +160,39 @@ class AuthController extends Notifier<AuthState> {
   Future<void> bootstrap() {
     appLog('AuthController.bootstrap(): called');
     return _bootstrap();
+  }
+
+  Future<void> updateProfile({
+    required String fullName,
+  }) async {
+    final currentState = state;
+    final currentSession = currentState.session;
+    final currentUser = currentState.user;
+
+    if (currentSession == null || currentUser == null) {
+      state = AuthState.unauthenticated(message: 'Session expired. Please sign in again.');
+      return;
+    }
+
+    try {
+      appLog('AuthController.updateProfile(): start');
+      final updatedUser = await ref.read(authRepositoryProvider).updateCurrentUser(
+            fullName: fullName,
+          );
+
+      state = AuthState.authenticated(
+        session: currentSession,
+        user: updatedUser,
+      );
+      appLog('AuthController.updateProfile(): success');
+    } catch (error) {
+      appLog('AuthController.updateProfile(): error -> $error');
+      state = AuthState.error(
+        session: currentSession,
+        user: currentUser,
+        message: error.toString(),
+      );
+      rethrow;
+    }
   }
 }

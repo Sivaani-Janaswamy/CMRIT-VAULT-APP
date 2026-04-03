@@ -1,6 +1,7 @@
 import '../../../core/services/backend_api_service.dart';
 import '../../subjects/domain/paginated_result.dart';
 import '../domain/search_resource_result.dart';
+import '../domain/search_suggestion_result.dart';
 
 class SearchRepository {
   SearchRepository({
@@ -24,6 +25,21 @@ class SearchRepository {
       data,
       SearchResourceResult.fromJson,
     );
+  }
+
+  Future<List<SearchSuggestionResult>> fetchSuggestions({
+    required String query,
+    int limit = 8,
+  }) async {
+    final items = await apiService.searchSuggest(
+      query: query,
+      limit: limit,
+    );
+
+    return items
+        .map(SearchSuggestionResult.fromJson)
+        .where((item) => item.title.trim().isNotEmpty)
+        .toList();
   }
 
   Map<String, dynamic> _extractData(Map<String, dynamic> response) {

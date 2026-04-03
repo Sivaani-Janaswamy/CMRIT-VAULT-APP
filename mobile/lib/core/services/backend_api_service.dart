@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
@@ -23,6 +24,7 @@ class BackendApiService {
 
   final String baseUrl;
   final SupabaseClient supabaseClient;
+  static const String _storageBucket = 'cmrit-vault-files';
 
   Future<void> syncAuth() async {
     appLog('BackendApiService.syncAuth(): start');
@@ -50,6 +52,45 @@ class BackendApiService {
     }
 
     throw const FormatException('Invalid /v1/users/me response');
+  }
+
+  Future<Map<String, dynamic>> updateCurrentUser({
+    String? fullName,
+    String? rollNo,
+    String? department,
+    int? semester,
+  }) async {
+    appLog('BackendApiService.updateCurrentUser(): start');
+    final body = <String, dynamic>{};
+    if (fullName != null) {
+      body['fullName'] = fullName;
+    }
+    if (rollNo != null) {
+      body['rollNo'] = rollNo;
+    }
+    if (department != null) {
+      body['department'] = department;
+    }
+    if (semester != null) {
+      body['semester'] = semester;
+    }
+
+    final response = await _request(
+      method: 'PATCH',
+      path: '/v1/users/me',
+      body: body,
+    );
+
+    final data = response['data'];
+    if (data is Map<String, dynamic>) {
+      final user = data['user'];
+      if (user is Map<String, dynamic>) {
+        appLog('BackendApiService.updateCurrentUser(): success');
+        return user;
+      }
+    }
+
+    throw const FormatException('Invalid PATCH /v1/users/me response');
   }
 
   Future<Map<String, dynamic>> fetchSubjects({
@@ -138,6 +179,34 @@ class BackendApiService {
     );
   }
 
+  Future<List<Map<String, dynamic>>> searchSuggest({
+    required String query,
+    int limit = 8,
+  }) async {
+    appLog('BackendApiService.searchSuggest(): start query="$query"');
+    final response = await _request(
+      method: 'GET',
+      path: '/v1/search/suggest',
+      queryParameters: {
+        'q': query,
+        'limit': limit.toString(),
+      },
+    );
+
+    final data = response['data'];
+    if (data is Map<String, dynamic>) {
+      final items = data['items'];
+      if (items is List) {
+        return items
+            .whereType<Map>()
+            .map((item) => Map<String, dynamic>.from(item))
+            .toList();
+      }
+    }
+
+    throw const FormatException('Invalid /v1/search/suggest response');
+  }
+
   Future<Map<String, dynamic>> fetchAdminDashboardSummary({
     String period = '30d',
   }) {
@@ -213,6 +282,92 @@ class BackendApiService {
     );
   }
 
+  Future<Map<String, dynamic>> createResource({
+    required Map<String, dynamic> body,
+  }) {
+    appLog('BackendApiService.createResource(): start');
+    return _request(
+      method: 'POST',
+      path: '/v1/resources',
+      body: body,
+    );
+  }
+
+  Future<Map<String, dynamic>> updateResource({
+    required String resourceId,
+    required Map<String, dynamic> body,
+  }) {
+    appLog('BackendApiService.updateResource(): start resourceId=$resourceId');
+    return _request(
+      method: 'PATCH',
+      path: '/v1/resources/$resourceId',
+      body: body,
+    );
+  }
+
+  Future<Map<String, dynamic>> submitResource({
+    required String resourceId,
+    String? reviewNote,
+  }) {
+    appLog('BackendApiService.submitResource(): start resourceId=$resourceId');
+    return _request(
+      method: 'POST',
+      path: '/v1/resources/$resourceId/submit',
+      body: reviewNote == null || reviewNote.trim().isEmpty
+          ? null
+          : {
+              'reviewNote': reviewNote.trim(),
+            },
+    );
+  }
+
+  Future<Map<String, dynamic>> completeResource({
+    required String resourceId,
+  }) {
+    appLog('BackendApiService.completeResource(): start resourceId=$resourceId');
+    return _request(
+      method: 'POST',
+      path: '/v1/resources/$resourceId/complete',
+    );
+  }
+
+  Future<Map<String, dynamic>> archiveResource({
+    required String resourceId,
+  }) {
+    appLog('BackendApiService.archiveResource(): start resourceId=$resourceId');
+    return _request(
+      method: 'DELETE',
+      path: '/v1/resources/$resourceId',
+    );
+  }
+
+  Future<Map<String, dynamic>> fetchFacultyResourceStats({
+    required String resourceId,
+  }) {
+    appLog('BackendApiService.fetchFacultyResourceStats(): start resourceId=$resourceId');
+    return _request(
+      method: 'GET',
+      path: '/v1/faculty/resources/$resourceId/stats',
+    );
+  }
+
+  Future<void> uploadFileWithSession({
+    required String uploadPath,
+    required Uint8List fileBytes,
+    required String mimeType,
+  }) async {
+    appLog('BackendApiService.uploadFileWithSession(): start path=$uploadPath');
+    await supabaseClient.storage.from(_storageBucket).uploadBinary(
+          uploadPath,
+          fileBytes,
+          fileOptions: FileOptions(
+            contentType: mimeType,
+            upsert: true,
+          ),
+        );
+    appLog('BackendApiService.uploadFileWithSession(): success path=$uploadPath');
+  }
+
   Future<Map<String, dynamic>> _request({
     required String method,
     required String path,
@@ -249,6 +404,12 @@ class BackendApiService {
           uri,
           headers: headers,
           body: body == null ? null : jsonEncode(body),
+        );
+        break;
+      case 'DELETE':
+        response = await http.delete(
+          uri,
+          headers: headers,
         );
         break;
       default:

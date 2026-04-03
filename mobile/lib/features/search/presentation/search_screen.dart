@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../application/search_controller.dart';
 import '../domain/search_resource_result.dart';
+import '../domain/search_suggestion_result.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
@@ -16,6 +17,7 @@ class SearchScreen extends ConsumerStatefulWidget {
 class _SearchScreenState extends ConsumerState<SearchScreen> {
   late final TextEditingController _queryController;
   String _submittedQuery = '';
+  String _suggestionQuery = '';
 
   @override
   void initState() {
@@ -33,6 +35,23 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final query = _queryController.text.trim();
     setState(() {
       _submittedQuery = query;
+      _suggestionQuery = '';
+    });
+    FocusScope.of(context).unfocus();
+  }
+
+  void _onQueryChanged(String value) {
+    final query = value.trim();
+    setState(() {
+      _suggestionQuery = query;
+    });
+  }
+
+  void _selectSuggestion(SearchSuggestionResult suggestion) {
+    _queryController.text = suggestion.title;
+    setState(() {
+      _submittedQuery = suggestion.title;
+      _suggestionQuery = '';
     });
     FocusScope.of(context).unfocus();
   }
@@ -42,6 +61,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final resultsAsync = _submittedQuery.isEmpty
         ? null
         : ref.watch(searchResultsProvider(_submittedQuery));
+    final suggestionsAsync = _suggestionQuery.isEmpty
+      ? null
+      : ref.watch(searchSuggestionsProvider(_suggestionQuery));
 
     return Scaffold(
       appBar: AppBar(
@@ -55,6 +77,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             TextField(
               controller: _queryController,
               textInputAction: TextInputAction.search,
+              onChanged: _onQueryChanged,
               onSubmitted: (_) => _submitQuery(),
               decoration: InputDecoration(
                 hintText: 'Search notes, papers, and uploads',
@@ -65,6 +88,42 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 ),
               ),
             ),
+            if (suggestionsAsync != null) ...[
+              const SizedBox(height: 8),
+              suggestionsAsync.when(
+                loading: () => const LinearProgressIndicator(minHeight: 2),
+                error: (_, __) => const SizedBox.shrink(),
+                data: (items) {
+                  if (items.isEmpty) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8),
+                      child: Text('No suggestions'),
+                    );
+                  }
+
+                  return ConstrainedBox(
+                    constraints: const BoxConstraints(maxHeight: 240),
+                    child: Card(
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        itemCount: items.length,
+                        separatorBuilder: (context, index) =>
+                            const Divider(height: 1),
+                        itemBuilder: (context, index) {
+                          final suggestion = items[index];
+                          return ListTile(
+                            dense: true,
+                            title: Text(suggestion.title),
+                            subtitle: Text(suggestion.subtitleLabel),
+                            onTap: () => _selectSuggestion(suggestion),
+                          );
+                        },
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
             const SizedBox(height: 16),
             Expanded(
               child: resultsAsync == null

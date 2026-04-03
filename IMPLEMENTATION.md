@@ -121,7 +121,7 @@ Faculty endpoint note: `/v1/faculty/*` may include faculty-owned archived resour
 | Downloads history | `/v1/downloads/me` | ✅ | Read-only history list implemented |
 | Search screen | `/v1/search/resources` | ✅ | Implemented with submit-to-search UI and tappable results |
 | Download action (resource detail) | `POST /v1/resources/:id/download-url` | ✅ | Signed URL request opens natively; clipboard fallback remains for devices that cannot launch the URL |
-| Faculty dashboard | `/v1/faculty/*` | ⚠️ | Backend faculty endpoints are implemented; client dashboard screens remain missing |
+| Faculty dashboard | `/v1/faculty/*` | ✅ | Implemented with role-aware route guard, dashboard summary, resources list, create/edit form, submit/archive actions, and per-resource stats |
 | Admin panel | `/v1/admin/*` | ✅ | Implemented with role-aware route guard, dashboard summary, resources overview, downloads overview, and moderation actions |
 
 ### Mobile Structure Status
@@ -129,10 +129,10 @@ Faculty endpoint note: `/v1/faculty/*` may include faculty-owned archived resour
 | Area | Status | Notes |
 | --- | --- | --- |
 | Riverpod state management | ✅ | Auth controller and providers exist |
-| `go_router` navigation | ✅ | Splash -> Login -> Signup -> Home + Subjects + Resource detail + Downloads + Search + Admin routes |
+| `go_router` navigation | ✅ | Splash -> Login -> Signup -> Home + Subjects + Resource detail + Downloads + Search + Admin routes + Faculty routes |
 | Supabase bootstrap | ✅ | Initialized in app startup |
-| Backend API client | ✅ | Thin HTTP wrapper includes subjects/resources/download-url/downloads-history/search plus admin summary/overview/moderation methods |
-| Feature-based structure | ⚠️ | Auth, home, subjects/resources, downloads-history, search, and admin are organized; faculty client modules remain |
+| Backend API client | ✅ | Thin HTTP wrapper includes subjects/resources/download-url/downloads-history/search plus admin and faculty summary/overview/lifecycle/stats methods |
+| Feature-based structure | ✅ | Auth, home, subjects/resources, downloads-history, search, admin, and faculty modules are organized |
 
 ## 5. Frontend (Web)
 
@@ -160,10 +160,10 @@ Faculty endpoint note: `/v1/faculty/*` may include faculty-owned archived resour
 | Auth bootstrap | ✅ | ✅ | ⚠️ | Backend and mobile exist; web scaffold exists but auth pages are missing |
 | Users profile | ✅ | ❌ | ❌ | Web profile flow missing |
 | Subjects browsing | ✅ | ✅ | ❌ | Mobile subject list + subject resource browsing are implemented |
-| Resources lifecycle | ✅ | ⚠️ | ❌ | Backend lifecycle is complete; mobile has list/detail browsing, but upload/moderation client flows are pending |
+| Resources lifecycle | ✅ | ✅ | ❌ | Backend lifecycle is complete; mobile supports faculty create/update/submit/archive and admin moderation |
 | Downloads tracking | ✅ | ✅ | ❌ | Backend endpoints are implemented; mobile history and native open/download UX are implemented; web history remains pending |
 | Search | ✅ | ✅ | ❌ | Backend Algolia search is implemented; mobile search screen is implemented; web search remains missing |
-| Faculty dashboard | ✅ | ❌ | ❌ | ⚠️ Backend faculty endpoints are implemented; client dashboard screens remain missing |
+| Faculty dashboard | ✅ | ✅ | ❌ | ⚠️ Backend faculty endpoints are implemented; mobile dashboard/resources/stats are live, web faculty UI is pending |
 | Admin panel | ✅ | ✅ | ❌ | ⚠️ Backend admin analytics endpoints are implemented; mobile admin UI is live, web admin UI is pending |
 | App shell / navigation | ✅ | ✅ | ⚠️ | Web has a starter App Router scaffold, but production navigation/auth routes are missing |
 
@@ -184,11 +184,11 @@ Faculty endpoint note: `/v1/faculty/*` may include faculty-owned archived resour
 
 | Area | Issue | Risk | Fix |
 | --- | --- | --- | --- |
-| Mobile feature depth | Subjects/resources browsing, downloads history, search, and admin panel are implemented; faculty client surfaces are still pending | Feature growth can become uneven across client roles | Continue feature folders for faculty with same patterns |
+| Mobile feature depth | Subjects/resources browsing, downloads history, search, admin panel, and faculty lifecycle/stats are implemented | Primary remaining client imbalance is now web parity by role | Continue role-surface parity work on web |
 | Web app state | Starter Next.js page still shows template content | Production confusion and weak brand identity | Replace starter page with CMRIT Vault app shell and auth-aware layout |
 | Backend module surface | Core backend modules including admin are implemented | Remaining risk is client adoption and operational hardening | Focus on client integration + production hardening |
 | Shared API contracts | No shared API DTO package between mobile and web | Drift risk across clients | Introduce a stable response/types layer if needed later |
-| Content lifecycle | Mobile browsing plus native download flow are in place, search is available, and admin moderation is now available | UX is stronger on mobile but still not complete across faculty/web surfaces | Build faculty client slices and web role surfaces next |
+| Content lifecycle | Mobile browsing plus native download flow, search, admin moderation, and faculty lifecycle are available | UX is strong on mobile but still not complete on web role surfaces | Build web role surfaces next |
 
 ## 9. Production Risks
 
@@ -227,7 +227,7 @@ Faculty endpoint note: `/v1/faculty/*` may include faculty-owned archived resour
 | Item | Scope | Dependency |
 | --- | --- | --- |
 | Search | Algolia relevance tuning, indexing sync validation, and result ranking refinements | Search backend stability |
-| Faculty dashboard | Backend endpoints are implemented; client upload oversight and status/history UI remains | Resources module |
+| Faculty dashboard | Mobile faculty dashboard/resources lifecycle/stats UI is implemented; web faculty UI remains | Resources module |
 | Admin panel | Mobile analytics/moderation UI is implemented; web admin UI remains | Users/resources/downloads modules |
 
 ### Phase 4: Production Hardening

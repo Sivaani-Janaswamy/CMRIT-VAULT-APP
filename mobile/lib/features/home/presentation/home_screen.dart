@@ -36,6 +36,10 @@ class HomeScreen extends ConsumerWidget {
         title: const Text('CMRIT Vault'),
         actions: [
           IconButton(
+            onPressed: () => context.push('/profile/edit'),
+            icon: const Icon(Icons.person_outline),
+          ),
+          IconButton(
             onPressed: () => ref.read(authControllerProvider.notifier).signOut(),
             icon: const Icon(Icons.logout),
           ),

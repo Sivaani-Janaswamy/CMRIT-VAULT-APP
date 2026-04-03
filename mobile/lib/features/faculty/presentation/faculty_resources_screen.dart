@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../auth/application/auth_controller.dart';
 import '../../subjects/domain/resource_item.dart';
@@ -18,12 +19,130 @@ class FacultyResourcesScreen extends ConsumerStatefulWidget {
 class _FacultyResourcesScreenState extends ConsumerState<FacultyResourcesScreen> {
   int _page = 1;
   String? _status;
+  final Set<String> _busyResourceIds = <String>{};
 
   FacultyResourcesFilters get _filters => FacultyResourcesFilters(
         page: _page,
         pageSize: 20,
         status: _status,
       );
+
+  Future<void> _refreshCurrentList() async {
+    ref.invalidate(facultyResourcesProvider(_filters));
+  }
+
+  Future<void> _navigateToCreate() async {
+    final result = await context.push('/faculty/resources/new');
+    if (result == true) {
+      await _refreshCurrentList();
+    }
+  }
+
+  Future<void> _navigateToEdit(ResourceItem item) async {
+    final result = await context.push(
+      '/faculty/resources/${item.id}/edit',
+      extra: item,
+    );
+    if (result == true) {
+      await _refreshCurrentList();
+    }
+  }
+
+  Future<void> _submitResource(ResourceItem item) async {
+    if (_busyResourceIds.contains(item.id)) {
+      return;
+    }
+
+    setState(() {
+      _busyResourceIds.add(item.id);
+    });
+
+    try {
+      await ref
+          .read(facultyResourceActionControllerProvider.notifier)
+          .submitResource(resourceId: item.id);
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Resource submitted for review')),
+      );
+      await _refreshCurrentList();
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Submit failed: $error')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _busyResourceIds.remove(item.id);
+        });
+      }
+    }
+  }
+
+  Future<void> _archiveResource(ResourceItem item) async {
+    if (_busyResourceIds.contains(item.id)) {
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Confirm archive'),
+          content: Text('Archive "${item.title}"?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Archive'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) {
+      return;
+    }
+
+    setState(() {
+      _busyResourceIds.add(item.id);
+    });
+
+    try {
+      await ref
+          .read(facultyResourceActionControllerProvider.notifier)
+          .archiveResource(resourceId: item.id);
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Resource archived successfully')),
+      );
+      await _refreshCurrentList();
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Archive failed: $error')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _busyResourceIds.remove(item.id);
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,6 +157,13 @@ class _FacultyResourcesScreenState extends ConsumerState<FacultyResourcesScreen>
     return Scaffold(
       appBar: AppBar(
         title: const Text('Faculty Resources'),
+        actions: [
+          IconButton(
+            onPressed: _navigateToCreate,
+            icon: const Icon(Icons.add),
+            tooltip: 'Create resource',
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -118,7 +244,21 @@ class _FacultyResourcesScreenState extends ConsumerState<FacultyResourcesScreen>
                           separatorBuilder: (context, index) =>
                               const SizedBox(height: 8),
                           itemBuilder: (context, index) {
-                            return _FacultyResourceCard(item: page.items[index]);
+                            final item = page.items[index];
+                            return _FacultyResourceCard(
+                              item: item,
+                              isBusy: _busyResourceIds.contains(item.id),
+                              onEdit: () => _navigateToEdit(item),
+                              onViewStats: () => context.push(
+                                '/faculty/resources/${item.id}/stats',
+                              ),
+                              onSubmit: item.status == 'draft'
+                                  ? () => _submitResource(item)
+                                  : null,
+                              onArchive: item.status != 'archived'
+                                  ? () => _archiveResource(item)
+                                  : null,
+                            );
                           },
                         ),
                       ),
@@ -169,19 +309,62 @@ class _FacultyResourcesScreenState extends ConsumerState<FacultyResourcesScreen>
 class _FacultyResourceCard extends StatelessWidget {
   const _FacultyResourceCard({
     required this.item,
+    required this.isBusy,
+    required this.onEdit,
+    required this.onViewStats,
+    required this.onSubmit,
+    required this.onArchive,
   });
 
   final ResourceItem item;
+  final bool isBusy;
+  final VoidCallback onEdit;
+  final VoidCallback onViewStats;
+  final VoidCallback? onSubmit;
+  final VoidCallback? onArchive;
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      child: ListTile(
-        title: Text(item.title),
-        subtitle: Text(
-          '${item.status} • ${item.resourceType} • sem ${item.semester}',
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              item.title,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 6),
+            Text('${item.status} • ${item.resourceType} • sem ${item.semester}'),
+            Text('Downloads: ${item.downloadCount}'),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                OutlinedButton(
+                  onPressed: isBusy ? null : onEdit,
+                  child: const Text('Edit'),
+                ),
+                OutlinedButton(
+                  onPressed: isBusy ? null : onViewStats,
+                  child: const Text('Stats'),
+                ),
+                if (onSubmit != null)
+                  FilledButton.tonal(
+                    onPressed: isBusy ? null : onSubmit,
+                    child: const Text('Submit'),
+                  ),
+                if (onArchive != null)
+                  FilledButton(
+                    onPressed: isBusy ? null : onArchive,
+                    child: Text(isBusy ? 'Working...' : 'Archive'),
+                  ),
+              ],
+            ),
+          ],
         ),
-        trailing: Text(item.downloadCount.toString()),
       ),
     );
   }

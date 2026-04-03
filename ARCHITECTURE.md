@@ -1,4 +1,4 @@
-# ARCHITECHURE
+# ARCHITECTURE
 
 This document is the project entry point for CMRIT Vault.
 
@@ -171,8 +171,8 @@ Why:
 | Unauthenticated | Splash -> Login |
 | Authenticating | Splash loading state |
 | Authenticated student | Home -> Subjects -> Notes -> Search -> Downloads |
-| Authenticated faculty | Home -> Upload dashboard -> My uploads |
-| Authenticated admin | Admin area later |
+| Authenticated faculty | Home -> Faculty dashboard -> My uploads/resources lifecycle -> Resource stats |
+| Authenticated admin | Home -> Admin dashboard -> Resources overview -> Downloads overview |
 
 The app should never show a blank screen during auth transitions.
 
@@ -241,7 +241,7 @@ any → archived
 | Feature | Scope |
 |---|---|
 | Analytics | Download trends, popular subjects, active content |
-| Admin panel | Backend admin analytics endpoints implemented; client admin surfaces pending |
+| Admin panel | Backend admin analytics endpoints implemented; mobile admin surfaces implemented, web admin surfaces pending |
 | Audit logs | Security and operational tracing |
 | Web frontend | Next.js reusing the same API |
 
@@ -319,11 +319,11 @@ Any new feature should reuse these contracts instead of introducing parallel con
 | Area | Current State |
 |---|---|
 | Backend | Node.js API scaffold exists with auth, users, subjects, resources, downloads, search, faculty, and admin modules |
-| Mobile | Flutter app scaffold exists with Supabase auth bootstrap and routing |
+| Mobile | Flutter app includes Supabase auth bootstrap and role-aware routing with student browsing, faculty dashboard/resources lifecycle/stats, and admin analytics/moderation surfaces |
 | Schema reference | `DATABASE_DESIGN.md` is the canonical schema file |
 | Search | Algolia-backed read-model implemented; mobile/web search surfaces still planned |
-| Faculty dashboard | Backend faculty endpoints implemented; mobile/web dashboard UI still planned |
-| Admin analytics | Backend admin summary/resources overview/downloads overview endpoints implemented; mobile/web admin UI still planned |
+| Faculty dashboard | Backend faculty endpoints implemented; mobile faculty dashboard/resources lifecycle/stats UI is implemented, web faculty UI still planned |
+| Admin analytics | Backend admin summary/resources overview/downloads overview endpoints implemented; mobile admin UI is implemented, web admin UI still planned |
 | Resources and downloads backend modules | Implemented; only client screens and refinements remain |
 | Web frontend | Next.js scaffold exists; production screens and backend integration remain |
 
