@@ -23,7 +23,7 @@ Legend:
 | Subjects module | `backend/src/modules/subjects/*` | ✅ | Subject list/detail + admin CRUD endpoints implemented |
 | Resources module | `backend/src/modules/resources/*` | ✅ | Full lifecycle + moderation endpoint implemented |
 | Downloads module | `backend/src/modules/downloads/*` | ✅ | Signed URL + download history/audit endpoints implemented |
-| Search module | `backend/src/modules/search/*` | ❌ | Not present |
+| Search module | `backend/src/modules/search/*` | ✅ | Algolia-backed search, suggestions, and admin reindex endpoints implemented; env vars: `ALGOLIA_APP_ID`, `ALGOLIA_SEARCH_KEY`, `ALGOLIA_ADMIN_KEY`, `ALGOLIA_SEARCH_HOST`, `ALGOLIA_ADMIN_HOST`, `ALGOLIA_INDEX_NAME` |
 | Admin module | `backend/src/modules/admin/*` | ❌ | Not present |
 | Module router | `backend/src/modules/index.ts` | ✅ | Wires auth, users, admin-users, subjects, admin-subjects, resources, admin-resources, resource-downloads, downloads, admin-downloads routers |
 
@@ -55,10 +55,10 @@ Legend:
 | `POST /v1/resources/:id/download-url` | Resources/Downloads | ✅ | Signed download URL creation + audit logging implemented |
 | `GET /v1/downloads/me` | Downloads | ✅ | Caller-scoped download history with filters implemented |
 | `GET /v1/admin/downloads` | Downloads/Admin | ✅ | Admin audit history with filters implemented |
-| `GET /v1/search/resources` | Search | ❌ | Missing module |
-| `GET /v1/search/suggest` | Search | ❌ | Missing module |
-| `POST /v1/admin/search/reindex` | Search/Admin | ❌ | Missing module |
-| `POST /v1/admin/search/resources/:id/reindex` | Search/Admin | ❌ | Missing module |
+| `GET /v1/search/resources` | Search | ✅ | Algolia-backed search results implemented |
+| `GET /v1/search/suggest` | Search | ✅ | Algolia-backed autocomplete suggestions implemented |
+| `POST /v1/admin/search/reindex` | Search/Admin | ✅ | Admin-only bulk reindex implemented |
+| `POST /v1/admin/search/resources/:id/reindex` | Search/Admin | ✅ | Admin-only single-resource reindex implemented |
 | `GET /v1/faculty/dashboard/summary` | Admin/Faculty | ❌ | Missing module |
 | `GET /v1/faculty/resources` | Resources | ❌ | Missing module |
 | `GET /v1/faculty/resources/:id/stats` | Resources | ❌ | Missing module |
@@ -155,7 +155,7 @@ Clients cannot directly set status on creation.
 | Subjects browsing | ✅ | ❌ | ❌ | Backend subject list/detail/admin CRUD are implemented |
 | Resources lifecycle | ✅ | ❌ | ❌ | ⚠️ Backend lifecycle and moderation are implemented; clients still need content screens |
 | Downloads tracking | ✅ | ❌ | ❌ | ⚠️ Backend endpoints are implemented; client screens still missing |
-| Search | ❌ | ❌ | ❌ | Not implemented yet |
+| Search | ✅ | ❌ | ❌ | Backend Algolia search is implemented; mobile/web search screens are still missing |
 | Faculty dashboard | ❌ | ❌ | ❌ | Not implemented yet |
 | Admin panel | ❌ | ❌ | ❌ | Not implemented yet |
 | App shell / navigation | ✅ | ✅ | ⚠️ | Web has a starter App Router scaffold, but production navigation/auth routes are missing |
@@ -166,11 +166,11 @@ Clients cannot directly set status on creation.
 | --- | --- | --- | --- |
 | Resources module | Backend resources lifecycle exists, but mobile/web resource browsing is still missing | Users cannot browse content in client apps yet | Add mobile/web resource browsing and detail flows |
 | Downloads module | Backend downloads slice is implemented; mobile/web history UX is still missing | Users cannot access history from clients yet | Add mobile/web downloads history screens and integration |
-| Search module | Algolia integration is missing | No fast discovery or subject-based search | Add search indexing sync after resource publish/update |
-| Admin module | No dedicated admin module yet; only admin user-management endpoints exist inside users module | Content governance is still incomplete for resources/downloads/search | Implement full admin module after MVP content flow |
+| Search client surfaces | Backend Algolia search exists, but mobile/web search screens are missing | No discovery UX in clients | Add search screens, filters, and suggestion UI |
+| Admin module | No dedicated admin module yet; only admin user-management endpoints exist inside users module | Content governance is still incomplete for resources/downloads and moderation flows | Implement full admin module after MVP content flow |
 | Web backend integration | Next.js exists but is still starter-only | Web cannot consume auth/profile APIs yet | Add typed backend client and auth bootstrap flow |
 | Mobile content browsing | Flutter covers auth only | Users cannot browse content in app | Add subjects/resources/downloads screens and repositories |
-| API contract coverage | Auth/users/subjects/resources/downloads are implemented | Endpoint surface is still incomplete for search/faculty/admin analytics flows | Prioritize search and admin/faculty dashboard endpoints next |
+| API contract coverage | Auth/users/subjects/resources/downloads are implemented | Endpoint surface is still incomplete for client search/faculty/admin analytics flows | Prioritize client search and admin/faculty dashboard endpoints next |
 
 ## 8. Technical Debt
 
@@ -178,7 +178,7 @@ Clients cannot directly set status on creation.
 | --- | --- | --- | --- |
 | Mobile feature depth | Auth flow exists but feature modules stop at home | Feature growth becomes ad hoc | Add feature folders for subjects/resources/downloads/search |
 | Web app state | Starter Next.js page still shows template content | Production confusion and weak brand identity | Replace starter page with CMRIT Vault app shell and auth-aware layout |
-| Backend module surface | Missing search/admin modules | Prevents MVP completion | Implement modules in the planned order |
+| Backend module surface | Search module exists; dedicated admin module is still missing | Prevents MVP completion | Implement the remaining admin module in the planned order |
 | Shared API contracts | No shared API DTO package between mobile and web | Drift risk across clients | Introduce a stable response/types layer if needed later |
 | Content lifecycle | Client content flows are incomplete even though backend resources lifecycle exists | Upload/download/search cannot be end-to-end | Build client browsing and downstream slices next |
 
@@ -189,7 +189,7 @@ Clients cannot directly set status on creation.
 | Schema drift | Backend DB access | High | Keep code aligned to `DATABASE_DESIGN.md` and review queries against the schema |
 | Starter frontend exposure | Web | Medium | Replace template UI before user-facing release |
 | Download history UX gap | Mobile/Web | Medium | Implement client downloads history and signed URL consumption flows |
-| Missing search | Backend + frontend | Medium | Add Algolia indexing and search UI in phase 3 |
+| Client search UX gap | Mobile/Web | Medium | Add search screens and connect them to the backend search APIs |
 | Incomplete admin controls | Backend | Medium | Build moderation and user management before scaling to large usage |
 | Auth bootstrap regressions | Mobile | High | Preserve loading/error states and keep auth sync idempotent |
 
@@ -217,7 +217,7 @@ Clients cannot directly set status on creation.
 
 | Item | Scope | Dependency |
 | --- | --- | --- |
-| Search | Algolia indexing and query endpoints | Resources metadata stability |
+| Search | Algolia relevance tuning, indexing sync validation, and result ranking refinements | Search backend stability |
 | Faculty dashboard | Upload oversight and status management | Resources module |
 | Admin panel | User moderation and analytics | Users/resources/downloads modules |
 
@@ -274,7 +274,7 @@ Clients cannot directly set status on creation.
 | 2 | Replace Next.js starter page | Web | Current UI is only template content |
 | 3 | Add web backend client and auth flow | Web | Required for future production use |
 | 4 | Add content browsing screens to mobile | Mobile | Mobile app is auth-only right now |
-| 5 | Add search module | Backend | Search depends on stable resource metadata |
+| 5 | Add search client surfaces | Mobile/Web | Backend search is implemented; client discovery UX is the remaining gap |
 | 6 | Add admin module | Backend + Web | Needed for moderation and operational control |
 | 7 | Add production hardening | Cross-cutting | Needed before scaling beyond MVP usage |
 
@@ -289,6 +289,6 @@ Clients cannot directly set status on creation.
 | 5 | Implement mobile subject + resource browsing | Mobile | Uses backend APIs |
 | 6 | Replace Next.js starter UI with app shell | Web | Clean UI foundation |
 | 7 | Add web API client + auth integration | Web | Connect frontend to backend |
-| 8 | Implement search (Algolia) | Backend | Depends on resources |
+| 8 | Implement search client surfaces | Mobile/Web | Search backend is in place; client search UX still needs to be built |
 | 9 | Build admin module | Backend + Web | Needs all previous modules |
 | 10 | Add pagination, logging, monitoring | All | Production readiness |

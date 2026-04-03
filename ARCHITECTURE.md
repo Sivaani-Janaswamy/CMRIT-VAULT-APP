@@ -112,6 +112,20 @@ REST-first with a few hybrid endpoints for signed uploads, signed downloads, and
 | Repository | Database queries and persistence |
 | Integration | Supabase client, Algolia client, storage utilities |
 
+Repositories stay database-only. External search calls belong in the integration layer and are orchestrated by services.
+
+### Search Runtime Config
+
+Algolia runtime env vars:
+- `ALGOLIA_APP_ID`
+- `ALGOLIA_SEARCH_KEY`
+- `ALGOLIA_ADMIN_KEY`
+- `ALGOLIA_SEARCH_HOST`
+- `ALGOLIA_ADMIN_HOST`
+- `ALGOLIA_INDEX_NAME`
+
+Use the DSN/search host for read queries and the admin host for write/reindex operations.
+
 ### Backend Modules
 
 | Module | Responsibility |
@@ -305,9 +319,9 @@ Any new feature should reuse these contracts instead of introducing parallel con
 | Backend | Node.js API scaffold exists with auth, users, and subjects modules |
 | Mobile | Flutter app scaffold exists with Supabase auth bootstrap and routing |
 | Schema reference | `DATABASE_DESIGN.md` is the canonical schema file |
-| Search | Planned through Algolia |
-| Resources and downloads backend modules | Planned for later implementation |
-| Web frontend | Planned later with Next.js |
+| Search | Algolia-backed read-model implemented; mobile/web search surfaces still planned |
+| Resources and downloads backend modules | Implemented; only client screens and refinements remain |
+| Web frontend | Next.js scaffold exists; production screens and backend integration remain |
 
 ## 18. Final Note
 
