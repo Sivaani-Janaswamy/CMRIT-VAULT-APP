@@ -122,17 +122,17 @@ Faculty endpoint note: `/v1/faculty/*` may include faculty-owned archived resour
 | Search screen | `/v1/search/resources` | ✅ | Implemented with submit-to-search UI and tappable results |
 | Download action (resource detail) | `POST /v1/resources/:id/download-url` | ✅ | Signed URL request opens natively; clipboard fallback remains for devices that cannot launch the URL |
 | Faculty dashboard | `/v1/faculty/*` | ⚠️ | Backend faculty endpoints are implemented; client dashboard screens remain missing |
-| Admin panel | `/v1/admin/*` | ❌ | Not implemented |
+| Admin panel | `/v1/admin/*` | ✅ | Implemented with role-aware route guard, dashboard summary, resources overview, downloads overview, and moderation actions |
 
 ### Mobile Structure Status
 
 | Area | Status | Notes |
 | --- | --- | --- |
 | Riverpod state management | ✅ | Auth controller and providers exist |
-| `go_router` navigation | ✅ | Splash -> Login -> Signup -> Home + Subjects + Resource detail + Downloads + Search |
+| `go_router` navigation | ✅ | Splash -> Login -> Signup -> Home + Subjects + Resource detail + Downloads + Search + Admin routes |
 | Supabase bootstrap | ✅ | Initialized in app startup |
-| Backend API client | ✅ | Thin HTTP wrapper exists and includes subjects/resources/download-url/downloads-history/search methods |
-| Feature-based structure | ⚠️ | Auth, home, subjects/resources, downloads-history, and search are organized; admin/faculty client modules remain |
+| Backend API client | ✅ | Thin HTTP wrapper includes subjects/resources/download-url/downloads-history/search plus admin summary/overview/moderation methods |
+| Feature-based structure | ⚠️ | Auth, home, subjects/resources, downloads-history, search, and admin are organized; faculty client modules remain |
 
 ## 5. Frontend (Web)
 
@@ -164,7 +164,7 @@ Faculty endpoint note: `/v1/faculty/*` may include faculty-owned archived resour
 | Downloads tracking | ✅ | ✅ | ❌ | Backend endpoints are implemented; mobile history and native open/download UX are implemented; web history remains pending |
 | Search | ✅ | ✅ | ❌ | Backend Algolia search is implemented; mobile search screen is implemented; web search remains missing |
 | Faculty dashboard | ✅ | ❌ | ❌ | ⚠️ Backend faculty endpoints are implemented; client dashboard screens remain missing |
-| Admin panel | ✅ | ❌ | ❌ | ⚠️ Backend admin analytics endpoints are implemented; mobile/web admin UI is still missing |
+| Admin panel | ✅ | ✅ | ❌ | ⚠️ Backend admin analytics endpoints are implemented; mobile admin UI is live, web admin UI is pending |
 | App shell / navigation | ✅ | ✅ | ⚠️ | Web has a starter App Router scaffold, but production navigation/auth routes are missing |
 
 ## 7. Architectural Gaps
@@ -175,20 +175,20 @@ Faculty endpoint note: `/v1/faculty/*` may include faculty-owned archived resour
 | Downloads module | Backend downloads slice is implemented; mobile history screen exists, but web history UX is still missing | Users cannot access history from web yet | Add web downloads history screen and integration |
 | Download UX | Mobile now opens signed URLs natively with clipboard fallback when device launch fails | Fallback/error messaging can still be improved | Keep native-first behavior and refine user-facing failure messaging |
 | Search client surfaces | Backend Algolia search exists; mobile search is implemented; web search is still missing | Discovery UX is still missing on web | Add web search screens, filters, and suggestion UI |
-| Admin module | Dedicated admin module now exists for analytics overviews; client admin surfaces are still missing | Admin operations are backend-ready but not yet user-facing in clients | Implement mobile/web admin screens and workflows |
+| Admin module | Dedicated admin module exists for analytics and moderation; mobile admin client surfaces are implemented and web admin is pending | Admin operations are now user-facing on mobile, but web parity is missing | Implement web admin screens and workflows |
 | Web backend integration | Next.js exists but is still starter-only | Web cannot consume auth/profile APIs yet | Add typed backend client and auth bootstrap flow |
 | Mobile content browsing | Subjects/resources browsing, downloads history, and search are implemented | Core browsing and download consumption work, and discovery is now available on mobile | Focus next on web discovery surfaces |
-| API contract coverage | Auth/users/subjects/resources/downloads/faculty/search/admin backend endpoints are implemented | Endpoint surface is still incomplete for client search and client-facing dashboard/admin flows | Prioritize client search and client dashboard/admin surfaces next |
+| API contract coverage | Auth/users/subjects/resources/downloads/faculty/search/admin backend endpoints are implemented | Client adoption is still incomplete for faculty and web admin/dashboard surfaces | Prioritize faculty client screens and web dashboard/admin/search surfaces next |
 
 ## 8. Technical Debt
 
 | Area | Issue | Risk | Fix |
 | --- | --- | --- | --- |
-| Mobile feature depth | Subjects/resources browsing, downloads history, and search are implemented; faculty/admin client surfaces are still pending | Feature growth can become uneven across client roles | Continue feature folders for faculty/admin with same patterns |
+| Mobile feature depth | Subjects/resources browsing, downloads history, search, and admin panel are implemented; faculty client surfaces are still pending | Feature growth can become uneven across client roles | Continue feature folders for faculty with same patterns |
 | Web app state | Starter Next.js page still shows template content | Production confusion and weak brand identity | Replace starter page with CMRIT Vault app shell and auth-aware layout |
 | Backend module surface | Core backend modules including admin are implemented | Remaining risk is client adoption and operational hardening | Focus on client integration + production hardening |
 | Shared API contracts | No shared API DTO package between mobile and web | Drift risk across clients | Introduce a stable response/types layer if needed later |
-| Content lifecycle | Mobile browsing plus native download flow are in place, and search is now available; admin flows are still incomplete | UX remains partially end-to-end | Build admin client slices next |
+| Content lifecycle | Mobile browsing plus native download flow are in place, search is available, and admin moderation is now available | UX is stronger on mobile but still not complete across faculty/web surfaces | Build faculty client slices and web role surfaces next |
 
 ## 9. Production Risks
 
@@ -199,7 +199,7 @@ Faculty endpoint note: `/v1/faculty/*` may include faculty-owned archived resour
 | Download fallback UX gap | Mobile | Low | Improve fallback and error messages when automatic URL launch is unavailable |
 | Download history UX gap | Mobile/Web | Medium | Implement web downloads history and signed URL consumption flows |
 | Client search UX gap | Web | Medium | Add web search screens and connect them to the backend search APIs |
-| Incomplete admin controls | Mobile/Web | Medium | Build admin client screens over already available backend admin endpoints |
+| Incomplete admin controls on web | Web | Medium | Build web admin client screens over already available backend admin endpoints |
 | Auth bootstrap regressions | Mobile | High | Preserve loading/error states and keep auth sync idempotent |
 
 ## 10. Roadmap
@@ -228,7 +228,7 @@ Faculty endpoint note: `/v1/faculty/*` may include faculty-owned archived resour
 | --- | --- | --- |
 | Search | Algolia relevance tuning, indexing sync validation, and result ranking refinements | Search backend stability |
 | Faculty dashboard | Backend endpoints are implemented; client upload oversight and status/history UI remains | Resources module |
-| Admin panel | Backend analytics endpoints are implemented; client moderation/analytics UI remains | Users/resources/downloads modules |
+| Admin panel | Mobile analytics/moderation UI is implemented; web admin UI remains | Users/resources/downloads modules |
 
 ### Phase 4: Production Hardening
 
@@ -283,7 +283,7 @@ Faculty endpoint note: `/v1/faculty/*` may include faculty-owned archived resour
 | 2 | ✅ Add mobile subject/resource browsing flow | Mobile | Completed and manually validated on emulator |
 | 3 | ✅ Implement native download completion UX from resource detail | Mobile | Signed URLs now open natively with a clipboard fallback |
 | 4 | Replace Next.js starter page and add landing/auth shell | Web | Landing/home surfaces are still missing |
-| 5 | Build admin client surfaces | Mobile/Web | Backend admin module is ready; user-facing admin workflows are pending |
+| 5 | Build web admin client surfaces | Web | Backend admin module is ready and mobile is implemented; web user-facing admin workflows are pending |
 | 6 | Add production hardening | Cross-cutting | Needed before scaling beyond MVP usage |
 
 ## 13. Execution Plan (Single Source of Truth)
@@ -297,7 +297,7 @@ Faculty endpoint note: `/v1/faculty/*` may include faculty-owned archived resour
 | 5 | ✅ Implement mobile subject + resource browsing | Mobile | Implemented and tested |
 | 6 | ✅ Implement native download completion UX (open/download file from signed URL) | Mobile | Signed URLs now open natively with a clipboard fallback |
 | 7 | Replace Next.js starter UI with landing/auth shell + API client bootstrap | Web | Home/landing surfaces are still missing |
-| 8 | Build admin client panel | Mobile/Web | Backend admin APIs exist; client integration is the remaining work |
+| 8 | Build web admin client panel | Web | Backend admin APIs exist; web client integration is the remaining work |
 | 9 | Add pagination, logging, monitoring | All | Production readiness |
 
 ## 14. Redesign Requirements Backlog

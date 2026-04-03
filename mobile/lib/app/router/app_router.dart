@@ -9,6 +9,13 @@ import '../../features/auth/domain/auth_state.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/signup_screen.dart';
 import '../../features/auth/presentation/splash_screen.dart';
+import '../../features/admin/presentation/admin_access_denied_view.dart';
+import '../../features/admin/presentation/admin_dashboard_screen.dart';
+import '../../features/admin/presentation/admin_downloads_overview_screen.dart';
+import '../../features/admin/presentation/admin_resources_overview_screen.dart';
+import '../../features/faculty/presentation/faculty_access_denied_view.dart';
+import '../../features/faculty/presentation/faculty_dashboard_screen.dart';
+import '../../features/faculty/presentation/faculty_resources_screen.dart';
 import '../../features/search/presentation/search_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/downloads/presentation/downloads_screen.dart';
@@ -98,6 +105,78 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/search',
         builder: (context, state) => const SearchScreen(),
+      ),
+      GoRoute(
+        path: '/admin',
+        builder: (context, state) {
+          final isAdmin = authState.user?.role == 'admin';
+          if (kDebugMode) {
+            appLog(
+              'GoRouter.admin guard: role=${authState.user?.role ?? "none"} access=${isAdmin ? "allowed" : "denied"}',
+            );
+          }
+          return isAdmin
+              ? const AdminDashboardScreen()
+              : const AdminAccessDeniedView();
+        },
+      ),
+      GoRoute(
+        path: '/admin/resources',
+        builder: (context, state) {
+          final isAdmin = authState.user?.role == 'admin';
+          if (kDebugMode) {
+            appLog(
+              'GoRouter.admin/resources guard: role=${authState.user?.role ?? "none"} access=${isAdmin ? "allowed" : "denied"}',
+            );
+          }
+          return isAdmin
+              ? const AdminResourcesOverviewScreen()
+              : const AdminAccessDeniedView();
+        },
+      ),
+      GoRoute(
+        path: '/admin/downloads',
+        builder: (context, state) {
+          final isAdmin = authState.user?.role == 'admin';
+          if (kDebugMode) {
+            appLog(
+              'GoRouter.admin/downloads guard: role=${authState.user?.role ?? "none"} access=${isAdmin ? "allowed" : "denied"}',
+            );
+          }
+          return isAdmin
+              ? const AdminDownloadsOverviewScreen()
+              : const AdminAccessDeniedView();
+        },
+      ),
+      GoRoute(
+        path: '/faculty',
+        builder: (context, state) {
+          final role = authState.user?.role;
+          final allowed = role == 'faculty' || role == 'admin';
+          if (kDebugMode) {
+            appLog(
+              'GoRouter.faculty guard: role=${role ?? "none"} access=${allowed ? "allowed" : "denied"}',
+            );
+          }
+          return allowed
+              ? const FacultyDashboardScreen()
+              : const FacultyAccessDeniedView();
+        },
+      ),
+      GoRoute(
+        path: '/faculty/resources',
+        builder: (context, state) {
+          final role = authState.user?.role;
+          final allowed = role == 'faculty' || role == 'admin';
+          if (kDebugMode) {
+            appLog(
+              'GoRouter.faculty/resources guard: role=${role ?? "none"} access=${allowed ? "allowed" : "denied"}',
+            );
+          }
+          return allowed
+              ? const FacultyResourcesScreen()
+              : const FacultyAccessDeniedView();
+        },
       ),
     ],
     errorBuilder: (context, state) {

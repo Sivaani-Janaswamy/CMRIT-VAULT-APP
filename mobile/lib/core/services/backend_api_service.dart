@@ -138,6 +138,81 @@ class BackendApiService {
     );
   }
 
+  Future<Map<String, dynamic>> fetchAdminDashboardSummary({
+    String period = '30d',
+  }) {
+    appLog('BackendApiService.fetchAdminDashboardSummary(): start period=$period');
+    return _request(
+      method: 'GET',
+      path: '/v1/admin/dashboard/summary',
+      queryParameters: {
+        'period': period,
+      },
+    );
+  }
+
+  Future<Map<String, dynamic>> fetchAdminResourcesOverview({
+    Map<String, String>? filters,
+  }) {
+    appLog('BackendApiService.fetchAdminResourcesOverview(): start');
+    return _request(
+      method: 'GET',
+      path: '/v1/admin/resources/overview',
+      queryParameters: filters,
+    );
+  }
+
+  Future<Map<String, dynamic>> fetchAdminDownloadsOverview({
+    Map<String, String>? filters,
+  }) {
+    appLog('BackendApiService.fetchAdminDownloadsOverview(): start');
+    return _request(
+      method: 'GET',
+      path: '/v1/admin/downloads/overview',
+      queryParameters: filters,
+    );
+  }
+
+  Future<Map<String, dynamic>> updateAdminResourceStatus({
+    required String resourceId,
+    required String status,
+  }) {
+    appLog(
+      'BackendApiService.updateAdminResourceStatus(): start resourceId=$resourceId status=$status',
+    );
+    return _request(
+      method: 'PATCH',
+      path: '/v1/admin/resources/$resourceId/status',
+      body: {
+        'status': status,
+      },
+    );
+  }
+
+  Future<Map<String, dynamic>> fetchFacultyDashboardSummary({
+    String period = '30d',
+  }) {
+    appLog('BackendApiService.fetchFacultyDashboardSummary(): start period=$period');
+    return _request(
+      method: 'GET',
+      path: '/v1/faculty/dashboard/summary',
+      queryParameters: {
+        'period': period,
+      },
+    );
+  }
+
+  Future<Map<String, dynamic>> fetchFacultyResources({
+    Map<String, String>? filters,
+  }) {
+    appLog('BackendApiService.fetchFacultyResources(): start');
+    return _request(
+      method: 'GET',
+      path: '/v1/faculty/resources',
+      queryParameters: filters,
+    );
+  }
+
   Future<Map<String, dynamic>> _request({
     required String method,
     required String path,
@@ -164,6 +239,13 @@ class BackendApiService {
         break;
       case 'POST':
         response = await http.post(
+          uri,
+          headers: headers,
+          body: body == null ? null : jsonEncode(body),
+        );
+        break;
+      case 'PATCH':
+        response = await http.patch(
           uri,
           headers: headers,
           body: body == null ? null : jsonEncode(body),

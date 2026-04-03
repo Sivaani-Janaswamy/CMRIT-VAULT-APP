@@ -95,6 +95,32 @@ class HomeScreen extends ConsumerWidget {
               icon: const Icon(Icons.search),
               label: const Text('Search'),
             ),
+            if (user?.role == 'admin') ...[
+              const SizedBox(height: 12),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: AppColors.text,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                onPressed: () => context.go('/admin'),
+                icon: const Icon(Icons.admin_panel_settings),
+                label: const Text('Admin Panel'),
+              ),
+            ],
+            if (user?.role == 'faculty' || user?.role == 'admin') ...[
+              const SizedBox(height: 12),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.highlightGreen,
+                  foregroundColor: AppColors.text,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                onPressed: () => context.go('/faculty'),
+                icon: const Icon(Icons.school),
+                label: const Text('Faculty Panel'),
+              ),
+            ],
           ],
         ),
       ),
