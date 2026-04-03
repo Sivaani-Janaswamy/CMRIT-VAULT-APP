@@ -398,6 +398,14 @@ All endpoints use the standard envelope:
 | `GET` | `/v1/faculty/resources` | Faculty/Admin | List own uploads | Filters + pagination | `{ items, pageInfo }` |
 | `GET` | `/v1/faculty/resources/:id/stats` | Owner/Admin | Resource stats | Path `id` | `{ stats }` |
 
+### Admin Analytics
+
+| Method | URL | Access | Purpose | Core Request | Core Response |
+|---|---|---|---|---|---|
+| `GET` | `/v1/admin/dashboard/summary` | Admin | System analytics summary | Optional period filter | `{ summary }` |
+| `GET` | `/v1/admin/resources/overview` | Admin | Resources overview with filters | Query params: pagination + resource filters | `{ items, pageInfo }` |
+| `GET` | `/v1/admin/downloads/overview` | Admin | Downloads overview with filters | Query params: pagination + download filters | `{ items, pageInfo }` |
+
 ### Search
 
 | Method | URL | Access | Purpose | Core Request | Core Response |

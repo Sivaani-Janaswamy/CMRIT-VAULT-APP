@@ -105,7 +105,7 @@ Faculty endpoint note: `/v1/faculty/*` may include faculty-owned archived resour
 | `resources` | `backend/src/modules/resources/*` | ✅ | Repository and service implemented |
 | `downloads` | `backend/src/modules/downloads/*` | ✅ | Repository/service/routes implemented |
 | `user_subject_access` | Not implemented | ❌ | Planned only |
-| `audit_logs` | `backend/src/modules/admin/admin.repository.ts` (best-effort write path) | ⚠️ | Backend audit write path exists; table/migration still pending |
+| `audit_logs` | `backend/src/modules/admin/admin.repository.ts` + Supabase `audit_logs` table | ✅ | Persistent audit logging is enabled with table, indexes, and RLS applied |
 
 ## 4. Flutter Mobile
 
