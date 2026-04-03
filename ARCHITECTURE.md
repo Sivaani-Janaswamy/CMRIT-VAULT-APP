@@ -53,7 +53,7 @@ CMRIT Vault uses a Supabase-first architecture with a thin Node.js API layer.
 | Private by default | Files must not be public buckets |
 | Metadata in Postgres | Store relationships, access data, and lifecycle state in the database |
 | Search as a read model | Algolia is only for search, never authorization |
-| Modular by feature | Organize code by auth, users, subjects, resources, downloads, admin, search |
+| Modular by feature | Organize code by auth, users, subjects, resources, downloads, search, faculty, admin |
 | API first | Mobile and future web should consume the same contracts |
 | Canonical schema first | The database schema drives backend and app contracts |
 
@@ -136,6 +136,7 @@ Use the DSN/search host for read queries and the admin host for write/reindex op
 | Resources | Content CRUD, moderation, visibility rules |
 | Downloads | History and audit |
 | Search | Algolia indexing and query flow |
+| Faculty | Faculty-scoped dashboard, resource listing, and per-resource stats |
 | Admin | Analytics and moderation support |
 
 ## 8. Mobile Architecture
@@ -199,6 +200,7 @@ any → archived
   - all published resources
   - their own draft, rejected and pending resources
 - Admin can see all resources
+- Dedicated faculty endpoints (`/v1/faculty/*`) may include faculty-owned archived resources for management and analytics; admin scope remains global.
 
 ### Moderation
 
@@ -316,10 +318,11 @@ Any new feature should reuse these contracts instead of introducing parallel con
 
 | Area | Current State |
 |---|---|
-| Backend | Node.js API scaffold exists with auth, users, subjects, resources, downloads, and search modules |
+| Backend | Node.js API scaffold exists with auth, users, subjects, resources, downloads, search, and faculty modules |
 | Mobile | Flutter app scaffold exists with Supabase auth bootstrap and routing |
 | Schema reference | `DATABASE_DESIGN.md` is the canonical schema file |
 | Search | Algolia-backed read-model implemented; mobile/web search surfaces still planned |
+| Faculty dashboard | Backend faculty endpoints implemented; mobile/web dashboard UI still planned |
 | Resources and downloads backend modules | Implemented; only client screens and refinements remain |
 | Web frontend | Next.js scaffold exists; production screens and backend integration remain |
 

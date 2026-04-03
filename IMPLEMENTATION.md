@@ -24,8 +24,9 @@ Legend:
 | Resources module | `backend/src/modules/resources/*` | ✅ | Full lifecycle + moderation endpoint implemented |
 | Downloads module | `backend/src/modules/downloads/*` | ✅ | Signed URL + download history/audit endpoints implemented |
 | Search module | `backend/src/modules/search/*` | ✅ | Algolia-backed search, suggestions, and admin reindex endpoints implemented; env vars: `ALGOLIA_APP_ID`, `ALGOLIA_SEARCH_KEY`, `ALGOLIA_ADMIN_KEY`, `ALGOLIA_SEARCH_HOST`, `ALGOLIA_ADMIN_HOST`, `ALGOLIA_INDEX_NAME` |
+| Faculty module | `backend/src/modules/faculty/*` | ✅ | Faculty dashboard summary, resource list, and stats endpoints implemented |
 | Admin module | `backend/src/modules/admin/*` | ❌ | Not present |
-| Module router | `backend/src/modules/index.ts` | ✅ | Wires auth, users, admin-users, subjects, admin-subjects, resources, admin-resources, resource-downloads, downloads, admin-downloads, search, and admin-search routers |
+| Module router | `backend/src/modules/index.ts` | ✅ | Wires auth, users, admin-users, subjects, admin-subjects, resources, admin-resources, resource-downloads, downloads, admin-downloads, faculty, search, and admin-search routers |
 
 ## 2. API Endpoints
 
@@ -59,9 +60,9 @@ Legend:
 | `GET /v1/search/suggest` | Search | ✅ | Algolia-backed autocomplete suggestions implemented |
 | `POST /v1/admin/search/reindex` | Search/Admin | ✅ | Admin-only bulk reindex implemented |
 | `POST /v1/admin/search/resources/:id/reindex` | Search/Admin | ✅ | Admin-only single-resource reindex implemented |
-| `GET /v1/faculty/dashboard/summary` | Admin/Faculty | ❌ | Missing module |
-| `GET /v1/faculty/resources` | Resources | ❌ | Missing module |
-| `GET /v1/faculty/resources/:id/stats` | Resources | ❌ | Missing module |
+| `GET /v1/faculty/dashboard/summary` | Faculty | ✅ | Faculty dashboard summary implemented |
+| `GET /v1/faculty/resources` | Faculty | ✅ | Faculty resource list implemented |
+| `GET /v1/faculty/resources/:id/stats` | Faculty | ✅ | Faculty resource stats implemented |
 
 ### Resource Lifecycle and Visibility Model
 
@@ -114,7 +115,7 @@ Clients cannot directly set status on creation.
 | Notes list/detail | `/v1/resources` | ❌ | Not implemented |
 | Downloads history | `/v1/downloads/me` | ❌ | Not implemented |
 | Search screen | `/v1/search/resources` | ❌ | Not implemented |
-| Faculty dashboard | `/v1/faculty/*` | ❌ | Not implemented |
+| Faculty dashboard | `/v1/faculty/*` | ⚠️ | Backend faculty endpoints are implemented; client dashboard screens remain missing |
 | Admin panel | `/v1/admin/*` | ❌ | Not implemented |
 
 ### Mobile Structure Status
@@ -156,7 +157,7 @@ Clients cannot directly set status on creation.
 | Resources lifecycle | ✅ | ❌ | ❌ | ⚠️ Backend lifecycle and moderation are implemented; clients still need content screens |
 | Downloads tracking | ✅ | ❌ | ❌ | ⚠️ Backend endpoints are implemented; client screens still missing |
 | Search | ✅ | ❌ | ❌ | Backend Algolia search is implemented; mobile/web search screens are still missing |
-| Faculty dashboard | ❌ | ❌ | ❌ | Not implemented yet |
+| Faculty dashboard | ✅ | ❌ | ❌ | ⚠️ Backend faculty endpoints are implemented; client dashboard screens remain missing |
 | Admin panel | ❌ | ❌ | ❌ | Not implemented yet |
 | App shell / navigation | ✅ | ✅ | ⚠️ | Web has a starter App Router scaffold, but production navigation/auth routes are missing |
 
@@ -170,7 +171,7 @@ Clients cannot directly set status on creation.
 | Admin module | No dedicated admin module yet; only admin user-management endpoints exist inside users module | Content governance is still incomplete for resources/downloads and moderation flows | Implement full admin module after MVP content flow |
 | Web backend integration | Next.js exists but is still starter-only | Web cannot consume auth/profile APIs yet | Add typed backend client and auth bootstrap flow |
 | Mobile content browsing | Flutter covers auth only | Users cannot browse content in app | Add subjects/resources/downloads screens and repositories |
-| API contract coverage | Auth/users/subjects/resources/downloads are implemented | Endpoint surface is still incomplete for client search/faculty/admin analytics flows | Prioritize client search and admin/faculty dashboard endpoints next |
+| API contract coverage | Auth/users/subjects/resources/downloads/faculty/search backend endpoints are implemented | Endpoint surface is still incomplete for client search/admin analytics and client-facing faculty dashboard flows | Prioritize client search and client dashboard endpoints next |
 
 ## 8. Technical Debt
 
@@ -178,9 +179,9 @@ Clients cannot directly set status on creation.
 | --- | --- | --- | --- |
 | Mobile feature depth | Auth flow exists but feature modules stop at home | Feature growth becomes ad hoc | Add feature folders for subjects/resources/downloads/search |
 | Web app state | Starter Next.js page still shows template content | Production confusion and weak brand identity | Replace starter page with CMRIT Vault app shell and auth-aware layout |
-| Backend module surface | Search module exists; dedicated admin module is still missing | Prevents MVP completion | Implement the remaining admin module in the planned order |
+| Backend module surface | Search and faculty modules exist; dedicated admin module is still missing | Prevents MVP completion | Implement the remaining admin module in the planned order |
 | Shared API contracts | No shared API DTO package between mobile and web | Drift risk across clients | Introduce a stable response/types layer if needed later |
-| Content lifecycle | Client content flows are incomplete even though backend resources lifecycle exists | Upload/download/search cannot be end-to-end | Build client browsing and downstream slices next |
+| Content lifecycle | Client content flows are incomplete even though backend resources/faculty lifecycle exists | Upload/download/search cannot be end-to-end | Build client browsing and downstream slices next |
 
 ## 9. Production Risks
 
@@ -218,7 +219,7 @@ Clients cannot directly set status on creation.
 | Item | Scope | Dependency |
 | --- | --- | --- |
 | Search | Algolia relevance tuning, indexing sync validation, and result ranking refinements | Search backend stability |
-| Faculty dashboard | Upload oversight and status management | Resources module |
+| Faculty dashboard | Backend endpoints are implemented; client upload oversight and status/history UI remains | Resources module |
 | Admin panel | User moderation and analytics | Users/resources/downloads modules |
 
 ### Phase 4: Production Hardening
@@ -241,7 +242,7 @@ Clients cannot directly set status on creation.
 | Config | `src/config/*` |
 | Common | `src/common/errors`, `src/common/middleware`, `src/common/utils`, `src/common/types` |
 | Integrations | `src/integrations/supabase`, `src/integrations/algolia.integration.ts` |
-| Modules | `src/modules/auth`, `src/modules/users`, `src/modules/subjects`, `src/modules/resources`, `src/modules/downloads`, `src/modules/search`, `src/modules/admin` |
+| Modules | `src/modules/auth`, `src/modules/users`, `src/modules/subjects`, `src/modules/resources`, `src/modules/downloads`, `src/modules/search`, `src/modules/faculty`, `src/modules/admin` |
 | Tests | `tests/` or module-local tests |
 
 ### Mobile (Flutter)
