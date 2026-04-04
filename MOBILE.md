@@ -39,6 +39,23 @@ flutter test
 flutter run
 ```
 
+API base URL selection:
+- Default (Android emulator): `http://10.0.2.2:4000`
+- Override for real phone/LAN/prod using `--dart-define`
+
+Examples:
+
+```bash
+# Real Android phone on same Wi-Fi as backend machine
+flutter run --dart-define=API_BASE_URL=http://192.168.1.50:4000
+
+# iOS simulator (Mac)
+flutter run --dart-define=API_BASE_URL=http://127.0.0.1:4000
+
+# Deployed backend
+flutter run --dart-define=API_BASE_URL=https://api.example.com
+```
+
 ## 4. Build Commands
 
 Android APK:
