@@ -17,6 +17,7 @@ class FacultyResourceStatsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
+        leading: const BackButton(),
         title: const Text('Resource Stats'),
       ),
       body: Padding(

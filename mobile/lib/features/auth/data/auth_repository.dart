@@ -22,10 +22,16 @@ class AuthRepository {
   }
 
   Future<AppUser> updateCurrentUser({
-    required String fullName,
+    String? fullName,
+    String? rollNo,
+    String? department,
+    int? semester,
   }) async {
     final json = await apiService.updateCurrentUser(
       fullName: fullName,
+      rollNo: rollNo,
+      department: department,
+      semester: semester,
     );
     return AppUser.fromJson(json);
   }

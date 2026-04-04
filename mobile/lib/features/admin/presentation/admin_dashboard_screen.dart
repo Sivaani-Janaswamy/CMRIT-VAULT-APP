@@ -30,71 +30,88 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            } else {
+              context.go('/home');
+            }
+          },
+        ),
         title: const Text('Admin Dashboard'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final showControls = constraints.maxHeight > 120;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text('Period:'),
-                const SizedBox(width: 12),
-                DropdownButton<String>(
-                  value: _period,
-                  items: const [
-                    DropdownMenuItem(value: '7d', child: Text('Last 7 days')),
-                    DropdownMenuItem(value: '30d', child: Text('Last 30 days')),
-                    DropdownMenuItem(value: '90d', child: Text('Last 90 days')),
-                    DropdownMenuItem(value: 'all', child: Text('All time')),
-                  ],
-                  onChanged: (value) {
-                    if (value == null) {
-                      return;
-                    }
-                    setState(() {
-                      _period = value;
-                    });
-                  },
-                ),
-                const Spacer(),
-                TextButton.icon(
-                  onPressed: () {
-                    ref.invalidate(adminDashboardSummaryProvider(_period));
-                  },
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Retry'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Expanded(
-              child: summaryAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (error, _) => Center(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Text('Failed to load dashboard summary'),
-                        const SizedBox(height: 8),
-                        Text(error.toString(), textAlign: TextAlign.center),
-                        const SizedBox(height: 12),
-                        FilledButton(
-                          onPressed: () {
-                            ref.invalidate(adminDashboardSummaryProvider(_period));
-                          },
-                          child: const Text('Retry'),
+                if (showControls) ...[
+                  Row(
+                    children: [
+                      const Text('Period:'),
+                      const SizedBox(width: 12),
+                      DropdownButton<String>(
+                        value: _period,
+                        items: const [
+                          DropdownMenuItem(value: '7d', child: Text('Last 7 days')),
+                          DropdownMenuItem(value: '30d', child: Text('Last 30 days')),
+                          DropdownMenuItem(value: '90d', child: Text('Last 90 days')),
+                          DropdownMenuItem(value: 'all', child: Text('All time')),
+                        ],
+                        onChanged: (value) {
+                          if (value == null) {
+                            return;
+                          }
+                          setState(() {
+                            _period = value;
+                          });
+                        },
+                      ),
+                      const Spacer(),
+                      TextButton.icon(
+                        onPressed: () {
+                          ref.invalidate(adminDashboardSummaryProvider(_period));
+                        },
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                Expanded(
+                  child: summaryAsync.when(
+                    loading: () => const Center(child: CircularProgressIndicator()),
+                    error: (error, _) => Center(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text('Failed to load dashboard summary'),
+                            const SizedBox(height: 8),
+                            Text(error.toString(), textAlign: TextAlign.center),
+                            const SizedBox(height: 12),
+                            FilledButton(
+                              onPressed: () {
+                                ref.invalidate(adminDashboardSummaryProvider(_period));
+                              },
+                              child: const Text('Retry'),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
+                    data: (summary) => _SummaryContent(summary: summary),
                   ),
                 ),
-                data: (summary) => _SummaryContent(summary: summary),
-              ),
-            ),
-          ],
+              ],
+            );
+          },
         ),
       ),
       bottomNavigationBar: SafeArea(
@@ -111,6 +128,17 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
               onPressed: () => context.push('/admin/resources'),
               icon: const Icon(Icons.library_books),
               label: const Text('Resources Overview'),
+            ),
+            const SizedBox(height: 8),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.text,
+                minimumSize: const Size.fromHeight(48),
+              ),
+              onPressed: () => context.push('/admin/resources/new'),
+              icon: const Icon(Icons.upload_file),
+              label: const Text('Create Resource'),
             ),
             const SizedBox(height: 8),
             ElevatedButton.icon(

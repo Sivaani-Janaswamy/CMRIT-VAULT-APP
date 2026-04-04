@@ -39,7 +39,10 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     final isLoading = authState.status == AuthStatus.signingUp;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Sign Up')),
+      appBar: AppBar(
+        leading: const BackButton(),
+        title: const Text('Sign Up'),
+      ),
       body: Center(
         child: SingleChildScrollView(
           child: Padding(
@@ -49,6 +52,11 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  const Text(
+                    'Use a valid email. You may need to confirm it before login.',
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 12),
                   TextField(
                     controller: _fullNameController,
                     decoration: const InputDecoration(labelText: 'Full name'),
@@ -76,7 +84,10 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   ),
                   if (authState.message != null) ...[
                     const SizedBox(height: 12),
-                    Text(authState.message!, textAlign: TextAlign.center),
+                    Text(
+                      authState.message!,
+                      textAlign: TextAlign.center,
+                    ),
                   ],
                 ],
               ),

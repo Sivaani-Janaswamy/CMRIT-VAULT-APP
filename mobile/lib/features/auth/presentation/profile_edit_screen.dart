@@ -13,6 +13,9 @@ class ProfileEditScreen extends ConsumerStatefulWidget {
 class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
   final _formKey = GlobalKey<FormState>();
   final _fullNameController = TextEditingController();
+  final _rollNoController = TextEditingController();
+  final _departmentController = TextEditingController();
+  final _semesterController = TextEditingController();
   bool _isSaving = false;
 
   @override
@@ -20,11 +23,17 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
     super.initState();
     final user = ref.read(authControllerProvider).user;
     _fullNameController.text = user?.fullName ?? '';
+    _rollNoController.text = user?.rollNo ?? '';
+    _departmentController.text = user?.department ?? '';
+    _semesterController.text = user?.semester?.toString() ?? '';
   }
 
   @override
   void dispose() {
     _fullNameController.dispose();
+    _rollNoController.dispose();
+    _departmentController.dispose();
+    _semesterController.dispose();
     super.dispose();
   }
 
@@ -38,8 +47,27 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
     });
 
     try {
+      final parsedSemester = int.tryParse(_semesterController.text.trim());
+      if (_semesterController.text.trim().isNotEmpty &&
+          (parsedSemester == null || parsedSemester < 1 || parsedSemester > 8)) {
+        if (!mounted) {
+          return;
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Semester must be between 1 and 8')),
+        );
+        return;
+      }
+
       await ref.read(authControllerProvider.notifier).updateProfile(
             fullName: _fullNameController.text.trim(),
+            rollNo: _rollNoController.text.trim().isEmpty
+                ? null
+                : _rollNoController.text.trim(),
+            department: _departmentController.text.trim().isEmpty
+                ? null
+                : _departmentController.text.trim(),
+            semester: parsedSemester,
           );
 
       if (!mounted) {
@@ -70,6 +98,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: const BackButton(),
         title: const Text('Edit Profile'),
       ),
       body: Padding(
@@ -90,6 +119,31 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                   }
                   return null;
                 },
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _rollNoController,
+                decoration: const InputDecoration(
+                  labelText: 'Roll no',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _departmentController,
+                decoration: const InputDecoration(
+                  labelText: 'Department',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _semesterController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Semester (1-8)',
+                  border: OutlineInputBorder(),
+                ),
               ),
               const SizedBox(height: 16),
               SizedBox(

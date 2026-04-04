@@ -19,6 +19,12 @@ final subjectsListProvider =
   return repository.fetchSubjects();
 });
 
+final subjectsSelectionProvider =
+    FutureProvider.autoDispose<PaginatedResult<Subject>>((ref) async {
+  final repository = ref.watch(subjectsRepositoryProvider);
+  return repository.fetchSubjects(page: 1, pageSize: 200);
+});
+
 final subjectDetailProvider =
     FutureProvider.autoDispose.family<Subject, String>((ref, subjectId) async {
   final repository = ref.watch(subjectsRepositoryProvider);

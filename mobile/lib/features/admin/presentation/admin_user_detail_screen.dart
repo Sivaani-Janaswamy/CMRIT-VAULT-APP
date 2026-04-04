@@ -25,6 +25,7 @@ class AdminUserDetailScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
+        leading: const BackButton(),
         title: const Text('User Detail'),
       ),
       body: Padding(

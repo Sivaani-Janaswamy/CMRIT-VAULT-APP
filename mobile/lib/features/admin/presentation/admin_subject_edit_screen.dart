@@ -23,6 +23,13 @@ class _AdminSubjectEditScreenState extends ConsumerState<AdminSubjectEditScreen>
   bool _isActive = true;
   String? _selectedSubjectId;
 
+  int _normalizeSemester(int value) {
+    if (value < 1 || value > 8) {
+      return 1;
+    }
+    return value;
+  }
+
   @override
   void dispose() {
     _codeController.dispose();
@@ -36,7 +43,7 @@ class _AdminSubjectEditScreenState extends ConsumerState<AdminSubjectEditScreen>
     _codeController.text = subject.code;
     _nameController.text = subject.name;
     _departmentController.text = subject.department;
-    _semester = subject.semester;
+    _semester = _normalizeSemester(subject.semester);
     _isActive = subject.isActive;
   }
 
@@ -51,6 +58,7 @@ class _AdminSubjectEditScreenState extends ConsumerState<AdminSubjectEditScreen>
 
     return Scaffold(
       appBar: AppBar(
+        leading: const BackButton(),
         title: const Text('Manage Subjects'),
       ),
       body: Padding(
@@ -73,9 +81,16 @@ class _AdminSubjectEditScreenState extends ConsumerState<AdminSubjectEditScreen>
             ),
           ),
           data: (page) {
-            final subjects = page.items;
+            final subjects = {
+              for (final subject in page.items) subject.id: subject,
+            }.values.toList();
             if (subjects.isEmpty) {
               return const Center(child: Text('No subjects found'));
+            }
+
+            if (_selectedSubjectId != null &&
+                !subjects.any((item) => item.id == _selectedSubjectId)) {
+              _applySubject(subjects.first);
             }
 
             Subject selected;
@@ -106,6 +121,7 @@ class _AdminSubjectEditScreenState extends ConsumerState<AdminSubjectEditScreen>
                   children: [
                     DropdownButtonFormField<String>(
                       initialValue: selected.id,
+                      isExpanded: true,
                       decoration: const InputDecoration(
                         labelText: 'Select Subject',
                         border: OutlineInputBorder(),
@@ -114,7 +130,11 @@ class _AdminSubjectEditScreenState extends ConsumerState<AdminSubjectEditScreen>
                           .map(
                             (subject) => DropdownMenuItem<String>(
                               value: subject.id,
-                              child: Text('${subject.code} - ${subject.name}'),
+                              child: Text(
+                                '${subject.code} - ${subject.name}',
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
                             ),
                           )
                           .toList(),

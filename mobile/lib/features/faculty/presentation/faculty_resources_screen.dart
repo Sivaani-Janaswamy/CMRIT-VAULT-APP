@@ -32,7 +32,7 @@ class _FacultyResourcesScreenState extends ConsumerState<FacultyResourcesScreen>
   }
 
   Future<void> _navigateToCreate() async {
-    final result = await context.push('/faculty/resources/new');
+    final result = await context.push('/faculty/resources/create');
     if (result == true) {
       await _refreshCurrentList();
     }
@@ -156,6 +156,7 @@ class _FacultyResourcesScreenState extends ConsumerState<FacultyResourcesScreen>
 
     return Scaffold(
       appBar: AppBar(
+        leading: const BackButton(),
         title: const Text('Faculty Resources'),
         actions: [
           IconButton(

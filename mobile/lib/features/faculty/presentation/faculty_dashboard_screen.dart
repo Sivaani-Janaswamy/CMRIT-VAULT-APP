@@ -28,6 +28,16 @@ class _FacultyDashboardScreenState extends ConsumerState<FacultyDashboardScreen>
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            } else {
+              context.go('/home');
+            }
+          },
+        ),
         title: const Text('Faculty Dashboard'),
       ),
       body: Padding(
@@ -90,6 +100,12 @@ class _FacultyDashboardScreenState extends ConsumerState<FacultyDashboardScreen>
                       ),
                       Card(
                         child: ListTile(
+                          title: const Text('Draft'),
+                          trailing: Text(summary.resources.draft.toString()),
+                        ),
+                      ),
+                      Card(
+                        child: ListTile(
                           title: const Text('Pending review'),
                           trailing: Text(summary.resources.pendingReview.toString()),
                         ),
@@ -102,8 +118,34 @@ class _FacultyDashboardScreenState extends ConsumerState<FacultyDashboardScreen>
                       ),
                       Card(
                         child: ListTile(
+                          title: const Text('Rejected'),
+                          trailing: Text(summary.resources.rejected.toString()),
+                        ),
+                      ),
+                      Card(
+                        child: ListTile(
+                          title: const Text('Archived'),
+                          trailing: Text(summary.resources.archived.toString()),
+                        ),
+                      ),
+                      Card(
+                        child: ListTile(
+                          title: const Text('Downloads total'),
+                          trailing: Text(summary.downloads.total.toString()),
+                        ),
+                      ),
+                      Card(
+                        child: ListTile(
                           title: const Text('Downloads in period'),
                           trailing: Text(summary.downloads.inPeriod.toString()),
+                        ),
+                      ),
+                      Card(
+                        child: ListTile(
+                          title: const Text('Downloads (mobile / web / admin)'),
+                          subtitle: Text(
+                            '${summary.downloads.mobile} / ${summary.downloads.web} / ${summary.downloads.admin}',
+                          ),
                         ),
                       ),
                     ],

@@ -49,6 +49,7 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: const BackButton(),
         title: const Text('Admin Users'),
       ),
       body: Padding(

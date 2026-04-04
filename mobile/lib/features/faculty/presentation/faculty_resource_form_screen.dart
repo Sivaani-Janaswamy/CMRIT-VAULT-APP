@@ -4,6 +4,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../subjects/application/subjects_controller.dart';
+import '../../subjects/domain/subject.dart';
 import '../../subjects/domain/resource_item.dart';
 import '../application/faculty_controller.dart';
 import '../domain/faculty_resource_form_input.dart';
@@ -29,7 +31,6 @@ class FacultyResourceFormScreen extends ConsumerStatefulWidget {
 class _FacultyResourceFormScreenState
     extends ConsumerState<FacultyResourceFormScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _subjectIdController = TextEditingController();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _academicYearController = TextEditingController();
@@ -40,6 +41,7 @@ class _FacultyResourceFormScreenState
 
   String _resourceType = 'note';
   int _semester = 1;
+  String? _selectedSubjectId;
   bool _isSaving = false;
   String? _loadError;
   String? _uploadStateLabel;
@@ -60,7 +62,6 @@ class _FacultyResourceFormScreenState
 
   @override
   void dispose() {
-    _subjectIdController.dispose();
     _titleController.dispose();
     _descriptionController.dispose();
     _academicYearController.dispose();
@@ -72,7 +73,7 @@ class _FacultyResourceFormScreenState
   }
 
   void _applyResource(ResourceItem resource) {
-    _subjectIdController.text = resource.subjectId;
+    _selectedSubjectId = resource.subjectId;
     _titleController.text = resource.title;
     _descriptionController.text = resource.description ?? '';
     _academicYearController.text = resource.academicYear;
@@ -86,10 +87,9 @@ class _FacultyResourceFormScreenState
 
   Future<void> _pickFile() async {
     final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
+      type: FileType.any,
       allowMultiple: false,
       withData: true,
-      allowedExtensions: const ['pdf', 'doc', 'docx', 'png', 'jpg', 'jpeg'],
     );
 
     if (result == null || result.files.isEmpty) {
@@ -137,9 +137,17 @@ class _FacultyResourceFormScreenState
       return null;
     }
 
+    final subjectId = _selectedSubjectId?.trim();
+    if (subjectId == null || subjectId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Select a subject')),
+      );
+      return null;
+    }
+
     final description = _descriptionController.text.trim();
     return FacultyResourceFormInput(
-      subjectId: _subjectIdController.text.trim(),
+      subjectId: subjectId,
       title: _titleController.text.trim(),
       description: description.isEmpty ? null : description,
       resourceType: _resourceType,
@@ -302,8 +310,11 @@ class _FacultyResourceFormScreenState
 
   @override
   Widget build(BuildContext context) {
+    final subjectsAsync = ref.watch(subjectsSelectionProvider);
+
     return Scaffold(
       appBar: AppBar(
+        leading: const BackButton(),
         title: Text(widget.isEdit ? 'Edit Resource' : 'Create Resource'),
       ),
       body: _loadError != null
@@ -323,20 +334,74 @@ class _FacultyResourceFormScreenState
                     key: _formKey,
                     child: Column(
                       children: [
-                        TextFormField(
-                          controller: _subjectIdController,
-                          decoration: const InputDecoration(
-                            labelText: 'Subject ID',
-                            border: OutlineInputBorder(),
+                        subjectsAsync.when(
+                          loading: () => const Padding(
+                            padding: EdgeInsets.only(bottom: 10),
+                            child: LinearProgressIndicator(),
                           ),
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'Required';
+                          error: (error, _) => Padding(
+                            padding: const EdgeInsets.only(bottom: 10),
+                            child: Text(
+                              'Failed to load subjects: $error',
+                              style: const TextStyle(color: Colors.red),
+                            ),
+                          ),
+                          data: (page) {
+                            final map = <String, Subject>{
+                              for (final item in page.items) item.id: item,
+                            };
+                            final subjects = map.values.toList();
+
+                            final hasSelected = _selectedSubjectId != null &&
+                                _selectedSubjectId!.isNotEmpty;
+                            final selectedExists = hasSelected &&
+                                map.containsKey(_selectedSubjectId);
+
+                            final items = <DropdownMenuItem<String>>[];
+                            if (hasSelected && !selectedExists) {
+                              items.add(
+                                DropdownMenuItem<String>(
+                                  value: _selectedSubjectId,
+                                  child: Text('Current subject (${_selectedSubjectId!})'),
+                                ),
+                              );
                             }
-                            return null;
+                            items.addAll(
+                              subjects.map(
+                                (subject) => DropdownMenuItem<String>(
+                                  value: subject.id,
+                                  child: Text('${subject.name} (${subject.code})'),
+                                ),
+                              ),
+                            );
+
+                            return Column(
+                              children: [
+                                DropdownButtonFormField<String>(
+                                  initialValue: _selectedSubjectId,
+                                  isExpanded: true,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Subject',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  items: items,
+                                  validator: (value) {
+                                    if (value == null || value.trim().isEmpty) {
+                                      return 'Required';
+                                    }
+                                    return null;
+                                  },
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _selectedSubjectId = value;
+                                    });
+                                  },
+                                ),
+                                const SizedBox(height: 10),
+                              ],
+                            );
                           },
                         ),
-                        const SizedBox(height: 10),
                         TextFormField(
                           controller: _titleController,
                           decoration: const InputDecoration(
@@ -456,66 +521,6 @@ class _FacultyResourceFormScreenState
                           ),
                           const SizedBox(height: 8),
                         ],
-                        TextFormField(
-                          controller: _fileNameController,
-                          readOnly: !widget.isEdit,
-                          decoration: const InputDecoration(
-                            labelText: 'File name',
-                            border: OutlineInputBorder(),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'Required';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 10),
-                        TextFormField(
-                          controller: _filePathController,
-                          readOnly: !widget.isEdit,
-                          decoration: const InputDecoration(
-                            labelText: 'File path',
-                            border: OutlineInputBorder(),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'Required';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 10),
-                        TextFormField(
-                          controller: _fileSizeController,
-                          readOnly: !widget.isEdit,
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                            labelText: 'File size (bytes)',
-                            border: OutlineInputBorder(),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'Required';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 10),
-                        TextFormField(
-                          controller: _mimeTypeController,
-                          readOnly: !widget.isEdit,
-                          decoration: const InputDecoration(
-                            labelText: 'MIME type',
-                            border: OutlineInputBorder(),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'Required';
-                            }
-                            return null;
-                          },
-                        ),
                         const SizedBox(height: 16),
                         if (_uploadStateLabel != null) ...[
                           Text(_uploadStateLabel!),

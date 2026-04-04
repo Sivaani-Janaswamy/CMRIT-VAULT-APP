@@ -49,6 +49,7 @@ class _AdminDownloadAuditScreenState
 
     return Scaffold(
       appBar: AppBar(
+        leading: const BackButton(),
         title: const Text('Download Audit'),
       ),
       body: Padding(

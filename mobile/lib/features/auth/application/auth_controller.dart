@@ -68,7 +68,10 @@ class AuthController extends Notifier<AuthState> {
       appLog('AuthController.signIn(): Supabase signInWithPassword completed');
     } on supabase.AuthException catch (error) {
       appLog('AuthController.signIn(): auth exception -> ${error.message}');
-      state = AuthState.unauthenticated(message: error.message);
+      final normalizedMessage = error.message.toLowerCase().contains('confirm')
+          ? 'Please confirm your email before signing in.'
+          : error.message;
+      state = AuthState.unauthenticated(message: normalizedMessage);
     } catch (error) {
       appLog('AuthController.signIn(): error -> $error');
       state = AuthState.unauthenticated(message: error.toString());
@@ -95,7 +98,7 @@ class AuthController extends Notifier<AuthState> {
       appLog('AuthController.signUp(): Supabase signUp completed session=${result.session != null}');
       if (result.session == null) {
         state = AuthState.unauthenticated(
-          message: 'Account created. Please sign in to continue.',
+          message: 'Account created. Check your email to confirm, then sign in.',
         );
       }
     } on supabase.AuthException catch (error) {
@@ -163,7 +166,10 @@ class AuthController extends Notifier<AuthState> {
   }
 
   Future<void> updateProfile({
-    required String fullName,
+    String? fullName,
+    String? rollNo,
+    String? department,
+    int? semester,
   }) async {
     final currentState = state;
     final currentSession = currentState.session;
@@ -178,6 +184,9 @@ class AuthController extends Notifier<AuthState> {
       appLog('AuthController.updateProfile(): start');
       final updatedUser = await ref.read(authRepositoryProvider).updateCurrentUser(
             fullName: fullName,
+        rollNo: rollNo,
+        department: department,
+        semester: semester,
           );
 
       state = AuthState.authenticated(

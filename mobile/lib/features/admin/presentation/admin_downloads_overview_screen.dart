@@ -54,6 +54,7 @@ class _AdminDownloadsOverviewScreenState
 
     return Scaffold(
       appBar: AppBar(
+        leading: const BackButton(),
         title: const Text('Admin Downloads'),
       ),
       body: Padding(

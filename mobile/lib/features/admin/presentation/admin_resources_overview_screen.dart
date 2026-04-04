@@ -66,6 +66,7 @@ class _AdminResourcesOverviewScreenState
 
     return Scaffold(
       appBar: AppBar(
+        leading: const BackButton(),
         title: const Text('Admin Resources'),
       ),
       body: Padding(
@@ -171,76 +172,70 @@ class _AdminResourcesOverviewScreenState
               ),
             ),
             const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: DropdownButtonFormField<String?>(
-                    initialValue: _status,
-                    decoration: const InputDecoration(
-                      labelText: 'Status',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: const [
-                      DropdownMenuItem<String?>(value: null, child: Text('All')),
-                      DropdownMenuItem<String?>(
-                        value: 'draft',
-                        child: Text('draft'),
-                      ),
-                      DropdownMenuItem<String?>(
-                        value: 'pending_review',
-                        child: Text('pending_review'),
-                      ),
-                      DropdownMenuItem<String?>(
-                        value: 'published',
-                        child: Text('published'),
-                      ),
-                      DropdownMenuItem<String?>(
-                        value: 'rejected',
-                        child: Text('rejected'),
-                      ),
-                      DropdownMenuItem<String?>(
-                        value: 'archived',
-                        child: Text('archived'),
-                      ),
-                    ],
-                    onChanged: (value) {
-                      setState(() {
-                        _status = value;
-                      });
-                    },
-                  ),
+            DropdownButtonFormField<String?>(
+              initialValue: _status,
+              isExpanded: true,
+              decoration: const InputDecoration(
+                labelText: 'Status',
+                border: OutlineInputBorder(),
+              ),
+              items: const [
+                DropdownMenuItem<String?>(value: null, child: Text('All')),
+                DropdownMenuItem<String?>(
+                  value: 'draft',
+                  child: Text('draft'),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: DropdownButtonFormField<String?>(
-                    initialValue: _resourceType,
-                    decoration: const InputDecoration(
-                      labelText: 'Type',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: const [
-                      DropdownMenuItem<String?>(value: null, child: Text('All')),
-                      DropdownMenuItem<String?>(
-                        value: 'note',
-                        child: Text('note'),
-                      ),
-                      DropdownMenuItem<String?>(
-                        value: 'question_paper',
-                        child: Text('question_paper'),
-                      ),
-                      DropdownMenuItem<String?>(
-                        value: 'faculty_upload',
-                        child: Text('faculty_upload'),
-                      ),
-                    ],
-                    onChanged: (value) {
-                      setState(() {
-                        _resourceType = value;
-                      });
-                    },
-                  ),
+                DropdownMenuItem<String?>(
+                  value: 'pending_review',
+                  child: Text('pending_review'),
+                ),
+                DropdownMenuItem<String?>(
+                  value: 'published',
+                  child: Text('published'),
+                ),
+                DropdownMenuItem<String?>(
+                  value: 'rejected',
+                  child: Text('rejected'),
+                ),
+                DropdownMenuItem<String?>(
+                  value: 'archived',
+                  child: Text('archived'),
                 ),
               ],
+              onChanged: (value) {
+                setState(() {
+                  _status = value;
+                });
+              },
+            ),
+            const SizedBox(height: 8),
+            DropdownButtonFormField<String?>(
+              initialValue: _resourceType,
+              isExpanded: true,
+              decoration: const InputDecoration(
+                labelText: 'Type',
+                border: OutlineInputBorder(),
+              ),
+              items: const [
+                DropdownMenuItem<String?>(value: null, child: Text('All')),
+                DropdownMenuItem<String?>(
+                  value: 'note',
+                  child: Text('note'),
+                ),
+                DropdownMenuItem<String?>(
+                  value: 'question_paper',
+                  child: Text('question_paper'),
+                ),
+                DropdownMenuItem<String?>(
+                  value: 'faculty_upload',
+                  child: Text('faculty_upload'),
+                ),
+              ],
+              onChanged: (value) {
+                setState(() {
+                  _resourceType = value;
+                });
+              },
             ),
             const SizedBox(height: 8),
             DropdownButtonFormField<int?>(
@@ -407,19 +402,26 @@ class _PaginationBar extends StatelessWidget {
     final from = total == 0 ? 0 : ((page - 1) * pageSize) + 1;
     final to = (page * pageSize) > total ? total : (page * pageSize);
 
-    return Row(
+    return Wrap(
+      alignment: WrapAlignment.spaceBetween,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: 8,
+      runSpacing: 8,
       children: [
-        Expanded(
-          child: Text('Showing $from-$to of $total'),
-        ),
-        IconButton(
-          onPressed: onPrevious,
-          icon: const Icon(Icons.chevron_left),
-        ),
-        Text('Page $page'),
-        IconButton(
-          onPressed: onNext,
-          icon: const Icon(Icons.chevron_right),
+        Text('Showing $from-$to of $total'),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              onPressed: onPrevious,
+              icon: const Icon(Icons.chevron_left),
+            ),
+            Text('Page $page'),
+            IconButton(
+              onPressed: onNext,
+              icon: const Icon(Icons.chevron_right),
+            ),
+          ],
         ),
       ],
     );
