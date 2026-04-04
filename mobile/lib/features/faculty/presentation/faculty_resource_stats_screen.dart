@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/widgets/ui_state_widgets.dart';
 import '../application/faculty_controller.dart';
 
 class FacultyResourceStatsScreen extends ConsumerWidget {
@@ -23,14 +24,16 @@ class FacultyResourceStatsScreen extends ConsumerWidget {
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: statsAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const AppLoadingStateCard(label: 'Loading resource stats...'),
           error: (error, _) => Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('Failed to load resource stats'),
-                const SizedBox(height: 8),
-                Text(error.toString(), textAlign: TextAlign.center),
+                const AppEmptyStateCard(
+                  icon: Icons.error_outline,
+                  title: 'Failed to load resource stats',
+                  message: 'Please retry to continue.',
+                ),
                 const SizedBox(height: 12),
                 FilledButton(
                   onPressed: () {
@@ -45,25 +48,31 @@ class FacultyResourceStatsScreen extends ConsumerWidget {
             final downloads = stats.downloads;
             return ListView(
               children: [
+                const AppSectionHeader(title: 'Resource Statistics'),
+                const SizedBox(height: 8),
                 Card(
+                  margin: const EdgeInsets.only(bottom: 8),
                   child: ListTile(
                     title: const Text('Title'),
                     subtitle: Text(stats.resource.title),
                   ),
                 ),
                 Card(
+                  margin: const EdgeInsets.only(bottom: 8),
                   child: ListTile(
                     title: const Text('Status'),
                     trailing: Text(stats.resource.status),
                   ),
                 ),
                 Card(
+                  margin: const EdgeInsets.only(bottom: 8),
                   child: ListTile(
                     title: const Text('Total Downloads'),
                     trailing: Text(downloads.total.toString()),
                   ),
                 ),
                 Card(
+                  margin: const EdgeInsets.only(bottom: 8),
                   child: ListTile(
                     title: const Text('Mobile/Web/Admin'),
                     trailing: Text(
@@ -72,6 +81,7 @@ class FacultyResourceStatsScreen extends ConsumerWidget {
                   ),
                 ),
                 Card(
+                  margin: const EdgeInsets.only(bottom: 8),
                   child: ListTile(
                     title: const Text('First download'),
                     subtitle: Text(
@@ -81,6 +91,7 @@ class FacultyResourceStatsScreen extends ConsumerWidget {
                   ),
                 ),
                 Card(
+                  margin: const EdgeInsets.only(bottom: 8),
                   child: ListTile(
                     title: const Text('Last download'),
                     subtitle: Text(

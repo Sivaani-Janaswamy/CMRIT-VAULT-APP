@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/widgets/ui_state_widgets.dart';
 import '../../auth/application/auth_controller.dart';
 import '../application/faculty_controller.dart';
 import 'faculty_access_denied_view.dart';
@@ -45,40 +46,50 @@ class _FacultyDashboardScreenState extends ConsumerState<FacultyDashboardScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: [
-                const Text('Period:'),
-                const SizedBox(width: 12),
-                DropdownButton<String>(
-                  value: _period,
-                  items: const [
-                    DropdownMenuItem(value: '7d', child: Text('Last 7 days')),
-                    DropdownMenuItem(value: '30d', child: Text('Last 30 days')),
-                    DropdownMenuItem(value: '90d', child: Text('Last 90 days')),
-                    DropdownMenuItem(value: 'all', child: Text('All time')),
+            Card(
+              margin: EdgeInsets.zero,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  children: [
+                    const Text('Period:'),
+                    const SizedBox(width: 12),
+                    DropdownButton<String>(
+                      value: _period,
+                      items: const [
+                        DropdownMenuItem(value: '7d', child: Text('Last 7 days')),
+                        DropdownMenuItem(value: '30d', child: Text('Last 30 days')),
+                        DropdownMenuItem(value: '90d', child: Text('Last 90 days')),
+                        DropdownMenuItem(value: 'all', child: Text('All time')),
+                      ],
+                      onChanged: (value) {
+                        if (value == null) {
+                          return;
+                        }
+                        setState(() {
+                          _period = value;
+                        });
+                      },
+                    ),
                   ],
-                  onChanged: (value) {
-                    if (value == null) {
-                      return;
-                    }
-                    setState(() {
-                      _period = value;
-                    });
-                  },
                 ),
-              ],
+              ),
             ),
             const SizedBox(height: 12),
             Expanded(
               child: summaryAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
+                loading: () => const AppLoadingStateCard(
+                  label: 'Loading faculty dashboard...',
+                ),
                 error: (error, _) => Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text('Failed to load faculty dashboard'),
-                      const SizedBox(height: 8),
-                      Text(error.toString(), textAlign: TextAlign.center),
+                      const AppEmptyStateCard(
+                        icon: Icons.error_outline,
+                        title: 'Failed to load faculty dashboard',
+                        message: 'Please retry to continue.',
+                      ),
                       const SizedBox(height: 12),
                       FilledButton(
                         onPressed: () {

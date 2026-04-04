@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/widgets/ui_state_widgets.dart';
 import '../../auth/application/auth_controller.dart';
 import '../application/admin_controller.dart';
 import '../domain/admin_download_overview_item.dart';
@@ -60,14 +61,18 @@ class _AdminDownloadAuditScreenState
             const SizedBox(height: 12),
             Expanded(
               child: auditAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
+                loading: () => const AppLoadingStateCard(
+                  label: 'Loading download audit...',
+                ),
                 error: (error, _) => Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text('Failed to load download audit'),
-                      const SizedBox(height: 8),
-                      Text(error.toString(), textAlign: TextAlign.center),
+                      const AppEmptyStateCard(
+                        icon: Icons.error_outline,
+                        title: 'Failed to load download audit',
+                        message: 'Please retry to continue.',
+                      ),
                       const SizedBox(height: 12),
                       FilledButton(
                         onPressed: () {
@@ -80,7 +85,11 @@ class _AdminDownloadAuditScreenState
                 ),
                 data: (page) {
                   if (page.items.isEmpty) {
-                    return const Center(child: Text('No audit entries found'));
+                    return const AppEmptyStateCard(
+                      icon: Icons.fact_check_outlined,
+                      title: 'No audit entries found',
+                      message: 'Try adjusting your filters.',
+                    );
                   }
 
                   return ListView.separated(
@@ -161,6 +170,8 @@ class _AuditCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      margin: EdgeInsets.zero,
+      elevation: 1,
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(

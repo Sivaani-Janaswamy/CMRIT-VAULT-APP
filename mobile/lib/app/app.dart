@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/config/supabase_config.dart';
 import '../core/theme/app_colors.dart';
 import '../core/utils/app_logger.dart';
+import '../core/widgets/ui_state_widgets.dart';
 import 'router/app_router.dart';
 
 class CmrItVaultApp extends ConsumerStatefulWidget {
@@ -54,7 +55,7 @@ class _CmrItVaultAppState extends ConsumerState<CmrItVaultApp> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    CircularProgressIndicator(),
+                    AppLoadingAnimation(size: 72),
                     SizedBox(height: 12),
                     Text('Starting app...'),
                   ],

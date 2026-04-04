@@ -30,6 +30,8 @@ import '../../features/faculty/presentation/faculty_resources_screen.dart';
 import '../../features/search/presentation/search_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/downloads/presentation/downloads_screen.dart';
+import '../../features/resources/presentation/recently_viewed_screen.dart';
+import '../../features/resources/presentation/resource_type_resources_screen.dart';
 import '../../features/subjects/domain/subject.dart';
 import '../../features/subjects/domain/resource_item.dart';
 import '../../features/subjects/presentation/resource_detail_screen.dart';
@@ -60,7 +62,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           authState.session != null) {
         decision = isOnSplash ? null : '/splash';
       } else {
-        decision = (isOnLogin || isOnSignup) ? null : '/login';
+        decision = isOnSplash ? '/home' : null;
       }
 
       if (kDebugMode) {
@@ -121,6 +123,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/search',
         builder: (context, state) => const SearchScreen(),
+      ),
+      GoRoute(
+        path: '/recently-viewed',
+        builder: (context, state) => const RecentlyViewedScreen(),
+      ),
+      GoRoute(
+        path: '/resources/type/:resourceType',
+        builder: (context, state) {
+          final resourceType = state.pathParameters['resourceType'] ?? 'note';
+          return ResourceTypeResourcesScreen(resourceType: resourceType);
+        },
       ),
       GoRoute(
         path: '/admin',

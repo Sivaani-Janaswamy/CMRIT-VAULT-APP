@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/widgets/ui_state_widgets.dart';
 import '../../subjects/application/subjects_controller.dart';
 import '../../subjects/domain/subject.dart';
 import '../../subjects/domain/resource_item.dart';
@@ -318,14 +319,21 @@ class _FacultyResourceFormScreenState
         title: Text(widget.isEdit ? 'Edit Resource' : 'Create Resource'),
       ),
       body: _loadError != null
-              ? Center(
+              ? Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text('Failed to load resource'),
+                      const AppEmptyStateCard(
+                        icon: Icons.error_outline,
+                        title: 'Failed to load resource',
+                        message: 'Please retry to continue.',
+                      ),
                       const SizedBox(height: 8),
                       Text(_loadError!, textAlign: TextAlign.center),
                     ],
+                  ),
                   ),
                 )
               : SingleChildScrollView(
@@ -333,7 +341,12 @@ class _FacultyResourceFormScreenState
                   child: Form(
                     key: _formKey,
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        AppSectionHeader(
+                          title: widget.isEdit ? 'Resource Information' : 'Create Resource',
+                        ),
+                        const SizedBox(height: 12),
                         subjectsAsync.when(
                           loading: () => const Padding(
                             padding: EdgeInsets.only(bottom: 10),

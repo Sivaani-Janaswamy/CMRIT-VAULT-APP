@@ -128,19 +128,29 @@ class BackendApiService {
   }
 
   Future<Map<String, dynamic>> fetchResources({
-    required String subjectId,
+    String? subjectId,
+    String? resourceType,
     int page = 1,
     int pageSize = 20,
   }) {
-    appLog('BackendApiService.fetchResources(): start subjectId=$subjectId');
+    appLog(
+      'BackendApiService.fetchResources(): start subjectId=${subjectId ?? "all"} resourceType=${resourceType ?? "all"}',
+    );
+    final queryParameters = <String, String>{
+      'page': page.toString(),
+      'pageSize': pageSize.toString(),
+    };
+    if (subjectId != null && subjectId.isNotEmpty) {
+      queryParameters['subjectId'] = subjectId;
+    }
+    if (resourceType != null && resourceType.isNotEmpty) {
+      queryParameters['resourceType'] = resourceType;
+    }
+
     return _request(
       method: 'GET',
       path: '/v1/resources',
-      queryParameters: {
-        'subjectId': subjectId,
-        'page': page.toString(),
-        'pageSize': pageSize.toString(),
-      },
+      queryParameters: queryParameters,
     );
   }
 

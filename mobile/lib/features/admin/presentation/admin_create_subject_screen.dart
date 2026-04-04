@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/widgets/ui_state_widgets.dart';
 import '../../auth/application/auth_controller.dart';
 import '../application/admin_controller.dart';
 import 'admin_access_denied_view.dart';
@@ -92,12 +93,22 @@ class _AdminCreateSubjectScreenState
         leading: const BackButton(),
         title: const Text('Create Subject'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const AppSectionHeader(title: 'Subject Information'),
+                const SizedBox(height: 12),
+                Card(
+                  margin: EdgeInsets.zero,
+                  child: Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Column(
+                      children: [
               TextFormField(
                 controller: _codeController,
                 decoration: const InputDecoration(
@@ -162,6 +173,10 @@ class _AdminCreateSubjectScreenState
                   });
                 },
               ),
+                      ],
+                    ),
+                  ),
+                ),
               const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
@@ -170,7 +185,8 @@ class _AdminCreateSubjectScreenState
                   child: Text(_isSaving ? 'Creating...' : 'Create Subject'),
                 ),
               ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

@@ -16,7 +16,7 @@ final subjectsRepositoryProvider = Provider<SubjectsRepository>((ref) {
 final subjectsListProvider =
     FutureProvider.autoDispose<PaginatedResult<Subject>>((ref) async {
   final repository = ref.watch(subjectsRepositoryProvider);
-  return repository.fetchSubjects();
+  return repository.fetchSubjects(page: 1, pageSize: 200);
 });
 
 final subjectsSelectionProvider =
@@ -35,6 +35,16 @@ final subjectResourcesProvider = FutureProvider.autoDispose
     .family<PaginatedResult<ResourceItem>, String>((ref, subjectId) async {
   final repository = ref.watch(subjectsRepositoryProvider);
   return repository.fetchResources(subjectId: subjectId);
+});
+
+final resourcesByTypeProvider = FutureProvider.autoDispose
+    .family<PaginatedResult<ResourceItem>, String>((ref, resourceType) async {
+  final repository = ref.watch(subjectsRepositoryProvider);
+  return repository.fetchResources(
+    resourceType: resourceType,
+    page: 1,
+    pageSize: 100,
+  );
 });
 
 final resourceDetailProvider =

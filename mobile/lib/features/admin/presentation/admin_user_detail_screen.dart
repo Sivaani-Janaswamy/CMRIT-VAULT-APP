@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/widgets/ui_state_widgets.dart';
 import '../../auth/application/auth_controller.dart';
 import '../application/admin_controller.dart';
 import '../domain/admin_user_item.dart';
@@ -31,14 +32,16 @@ class AdminUserDetailScreen extends ConsumerWidget {
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: userAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const AppLoadingStateCard(label: 'Loading user detail...'),
           error: (error, _) => Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('Failed to load user detail'),
-                const SizedBox(height: 8),
-                Text(error.toString(), textAlign: TextAlign.center),
+                const AppEmptyStateCard(
+                  icon: Icons.error_outline,
+                  title: 'Failed to load user detail',
+                  message: 'Please retry to continue.',
+                ),
                 const SizedBox(height: 12),
                 FilledButton(
                   onPressed: () => ref.invalidate(adminUserDetailProvider(userId)),
@@ -141,6 +144,8 @@ class _DetailContent extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Card(
+            margin: EdgeInsets.zero,
+            elevation: 1,
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: Column(

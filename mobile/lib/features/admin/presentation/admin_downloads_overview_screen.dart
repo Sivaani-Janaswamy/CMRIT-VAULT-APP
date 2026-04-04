@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/widgets/ui_state_widgets.dart';
 import '../../auth/application/auth_controller.dart';
 import '../application/admin_controller.dart';
 import '../domain/admin_download_overview_item.dart';
@@ -65,7 +66,9 @@ class _AdminDownloadsOverviewScreenState
             const SizedBox(height: 12),
             Expanded(
               child: overviewAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
+                loading: () => const AppLoadingStateCard(
+                  label: 'Loading downloads overview...',
+                ),
                 error: (error, _) => _ErrorState(
                   message: error.toString(),
                   onRetry: () {
@@ -212,6 +215,8 @@ class _DownloadOverviewCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      margin: EdgeInsets.zero,
+      elevation: 1,
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
@@ -288,9 +293,11 @@ class _ErrorState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('Failed to load downloads overview'),
-          const SizedBox(height: 8),
-          Text(message, textAlign: TextAlign.center),
+          const AppEmptyStateCard(
+            icon: Icons.error_outline,
+            title: 'Failed to load downloads overview',
+            message: 'Please retry to continue.',
+          ),
           const SizedBox(height: 12),
           FilledButton(
             onPressed: onRetry,
@@ -315,7 +322,11 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('No downloads found for selected filters'),
+          const AppEmptyStateCard(
+            icon: Icons.download_outlined,
+            title: 'No downloads found',
+            message: 'Try adjusting your filters.',
+          ),
           const SizedBox(height: 12),
           OutlinedButton(
             onPressed: onRetry,

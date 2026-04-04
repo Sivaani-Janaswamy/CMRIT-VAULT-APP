@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/ui_state_widgets.dart';
+import '../../resources/presentation/widgets/resource_card_widget.dart';
 import '../application/subjects_controller.dart';
-import '../domain/resource_item.dart';
 import '../domain/subject.dart';
 
 class SubjectDetailScreen extends ConsumerWidget {
@@ -29,14 +29,16 @@ class SubjectDetailScreen extends ConsumerWidget {
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: subjectAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const AppLoadingStateCard(label: 'Loading subject details...'),
           error: (error, _) => Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('Failed to load subject details'),
-                const SizedBox(height: 8),
-                Text(error.toString(), textAlign: TextAlign.center),
+                const AppEmptyStateCard(
+                  icon: Icons.error_outline,
+                  title: 'Failed to load subject details',
+                  message: 'Please retry to continue.',
+                ),
                 const SizedBox(height: 12),
                 FilledButton(
                   onPressed: () => ref.invalidate(subjectDetailProvider(subjectId)),
@@ -69,21 +71,20 @@ class SubjectDetailScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                Text(
-                  'Resources',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
+                const AppSectionHeader(title: 'Resources'),
                 const SizedBox(height: 8),
                 Expanded(
                   child: resourcesAsync.when(
-                    loading: () => const Center(child: CircularProgressIndicator()),
+                    loading: () => const AppLoadingStateCard(label: 'Loading resources...'),
                     error: (error, _) => Center(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Text('Failed to load resources'),
-                          const SizedBox(height: 8),
-                          Text(error.toString(), textAlign: TextAlign.center),
+                          const AppEmptyStateCard(
+                            icon: Icons.error_outline,
+                            title: 'Failed to load resources',
+                            message: 'Please retry to continue.',
+                          ),
                           const SizedBox(height: 12),
                           FilledButton(
                             onPressed: () =>
@@ -95,7 +96,11 @@ class SubjectDetailScreen extends ConsumerWidget {
                     ),
                     data: (page) {
                       if (page.items.isEmpty) {
-                        return const Center(child: Text('No resources available'));
+                        return const AppEmptyStateCard(
+                          icon: Icons.folder_open_outlined,
+                          title: 'No resources found',
+                          message: 'Try searching or explore other subjects.',
+                        );
                       }
 
                       return ListView.separated(
@@ -104,8 +109,15 @@ class SubjectDetailScreen extends ConsumerWidget {
                             const SizedBox(height: 8),
                         itemBuilder: (context, index) {
                           final resource = page.items[index];
-                          return _ResourceCard(
-                            resource: resource,
+                          return ResourceCardWidget(
+                            data: ResourceCardData(
+                              resourceId: resource.id,
+                              title: resource.title,
+                              subjectLabel: subjectData.name,
+                              resourceType: resource.resourceType,
+                              downloadCount: resource.downloadCount,
+                              fileHint: resource.mimeType,
+                            ),
                             onTap: () => context.push('/resources/${resource.id}'),
                           );
                         },
@@ -122,30 +134,3 @@ class SubjectDetailScreen extends ConsumerWidget {
   }
 }
 
-class _ResourceCard extends StatelessWidget {
-  const _ResourceCard({
-    required this.resource,
-    required this.onTap,
-  });
-
-  final ResourceItem resource;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: ListTile(
-        onTap: onTap,
-        leading: const Icon(
-          Icons.description_outlined,
-          color: AppColors.primary,
-        ),
-        title: Text(resource.title),
-        subtitle: Text(
-          '${resource.resourceType} • ${resource.academicYear} • Sem ${resource.semester}',
-        ),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-      ),
-    );
-  }
-}

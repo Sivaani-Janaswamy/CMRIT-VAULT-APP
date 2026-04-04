@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/ui_state_widgets.dart';
 import '../application/auth_controller.dart';
 
 class ProfileEditScreen extends ConsumerStatefulWidget {
@@ -101,12 +103,22 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
         leading: const BackButton(),
         title: const Text('Edit Profile'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const AppSectionHeader(title: 'Profile Information'),
+                const SizedBox(height: 12),
+                Card(
+                  margin: EdgeInsets.zero,
+                  child: Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Column(
+                      children: [
               TextFormField(
                 controller: _fullNameController,
                 decoration: const InputDecoration(
@@ -145,15 +157,25 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                   border: OutlineInputBorder(),
                 ),
               ),
+              ],
+                    ),
+                  ),
+                ),
               const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: AppColors.text,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
                   onPressed: _isSaving ? null : _save,
                   child: Text(_isSaving ? 'Saving...' : 'Save'),
                 ),
               ),
             ],
+          ),
           ),
         ),
       ),

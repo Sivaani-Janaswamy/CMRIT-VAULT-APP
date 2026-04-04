@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/widgets/ui_state_widgets.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../subjects/domain/subject.dart';
 import '../application/admin_controller.dart';
@@ -64,14 +65,16 @@ class _AdminSubjectEditScreenState extends ConsumerState<AdminSubjectEditScreen>
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: subjectsAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const AppLoadingStateCard(label: 'Loading subjects...'),
           error: (error, _) => Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('Failed to load subjects'),
-                const SizedBox(height: 8),
-                Text(error.toString(), textAlign: TextAlign.center),
+                const AppEmptyStateCard(
+                  icon: Icons.error_outline,
+                  title: 'Failed to load subjects',
+                  message: 'Please retry to continue.',
+                ),
                 const SizedBox(height: 12),
                 FilledButton(
                   onPressed: () => ref.invalidate(adminSubjectsProvider),
@@ -85,7 +88,11 @@ class _AdminSubjectEditScreenState extends ConsumerState<AdminSubjectEditScreen>
               for (final subject in page.items) subject.id: subject,
             }.values.toList();
             if (subjects.isEmpty) {
-              return const Center(child: Text('No subjects found'));
+              return const AppEmptyStateCard(
+                icon: Icons.menu_book_outlined,
+                title: 'No subjects found',
+                message: 'Create a subject to start managing it.',
+              );
             }
 
             if (_selectedSubjectId != null &&
@@ -118,7 +125,16 @@ class _AdminSubjectEditScreenState extends ConsumerState<AdminSubjectEditScreen>
               child: Form(
                 key: _formKey,
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    const AppSectionHeader(title: 'Subject Management'),
+                    const SizedBox(height: 12),
+                    Card(
+                      margin: EdgeInsets.zero,
+                      child: Padding(
+                        padding: const EdgeInsets.all(14),
+                        child: Column(
+                          children: [
                     DropdownButtonFormField<String>(
                       initialValue: selected.id,
                       isExpanded: true,
@@ -230,6 +246,10 @@ class _AdminSubjectEditScreenState extends ConsumerState<AdminSubjectEditScreen>
                               });
                             },
                     ),
+                                ],
+                              ),
+                            ),
+                          ),
                     const SizedBox(height: 16),
                     SizedBox(
                       width: double.infinity,

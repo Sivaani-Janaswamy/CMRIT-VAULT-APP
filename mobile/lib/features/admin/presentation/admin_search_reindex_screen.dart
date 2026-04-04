@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/widgets/ui_state_widgets.dart';
 import '../../auth/application/auth_controller.dart';
 import '../application/admin_controller.dart';
 import 'admin_access_denied_view.dart';
@@ -24,46 +25,51 @@ class AdminSearchReindexScreen extends ConsumerWidget {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Trigger a full search reindex for admin recovery/backfill.',
-                textAlign: TextAlign.center,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const AppSectionHeader(title: 'Search Maintenance'),
+            const SizedBox(height: 10),
+            const AppEmptyStateCard(
+              icon: Icons.manage_search_outlined,
+              title: 'Trigger a full search reindex',
+              message: 'Use this for admin recovery and backfill operations.',
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: reindexState.isLoading
+                    ? null
+                    : () => _triggerReindex(context, ref),
+                icon: const Icon(Icons.sync),
+                label: Text(
+                  reindexState.isLoading ? 'Reindexing...' : 'Trigger Reindex',
+                ),
               ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: reindexState.isLoading
-                      ? null
-                      : () => _triggerReindex(context, ref),
-                  icon: const Icon(Icons.sync),
-                  label: Text(
-                    reindexState.isLoading ? 'Reindexing...' : 'Trigger Reindex',
+            ),
+            const SizedBox(height: 12),
+            reindexState.when(
+              data: (result) {
+                if (result == null) {
+                  return const SizedBox.shrink();
+                }
+                return Card(
+                  margin: EdgeInsets.zero,
+                  child: ListTile(
+                    title: const Text('Last result'),
+                    subtitle: Text('Status: ${result.status}\nJob ID: ${result.jobId}'),
                   ),
-                ),
+                );
+              },
+              loading: () => const AppLoadingStateCard(label: 'Checking reindex status...'),
+              error: (error, _) => const AppEmptyStateCard(
+                icon: Icons.error_outline,
+                title: 'Unable to fetch reindex status',
+                message: 'Please retry to continue.',
               ),
-              const SizedBox(height: 12),
-              reindexState.when(
-                data: (result) {
-                  if (result == null) {
-                    return const SizedBox.shrink();
-                  }
-                  return Text(
-                    'Last result: ${result.status} (jobId: ${result.jobId})',
-                    textAlign: TextAlign.center,
-                  );
-                },
-                loading: () => const CircularProgressIndicator(),
-                error: (error, _) => Text(
-                  'Error: $error',
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

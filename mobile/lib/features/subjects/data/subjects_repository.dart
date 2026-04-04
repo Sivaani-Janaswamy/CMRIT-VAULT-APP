@@ -23,12 +23,14 @@ class SubjectsRepository {
   }
 
   Future<PaginatedResult<ResourceItem>> fetchResources({
-    required String subjectId,
+    String? subjectId,
+    String? resourceType,
     int page = 1,
     int pageSize = 20,
   }) async {
     final response = await apiService.fetchResources(
       subjectId: subjectId,
+      resourceType: resourceType,
       page: page,
       pageSize: pageSize,
     );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/widgets/ui_state_widgets.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../subjects/domain/resource_item.dart';
 import '../application/faculty_controller.dart';
@@ -212,14 +213,18 @@ class _FacultyResourcesScreenState extends ConsumerState<FacultyResourcesScreen>
             const SizedBox(height: 12),
             Expanded(
               child: resourcesAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
+                loading: () => const AppLoadingStateCard(
+                  label: 'Loading faculty resources...',
+                ),
                 error: (error, _) => Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text('Failed to load faculty resources'),
-                      const SizedBox(height: 8),
-                      Text(error.toString(), textAlign: TextAlign.center),
+                      const AppEmptyStateCard(
+                        icon: Icons.error_outline,
+                        title: 'Failed to load faculty resources',
+                        message: 'Please retry to continue.',
+                      ),
                       const SizedBox(height: 12),
                       FilledButton(
                         onPressed: () {
@@ -232,8 +237,10 @@ class _FacultyResourcesScreenState extends ConsumerState<FacultyResourcesScreen>
                 ),
                 data: (page) {
                   if (page.items.isEmpty) {
-                    return const Center(
-                      child: Text('No resources found'),
+                    return const AppEmptyStateCard(
+                      icon: Icons.folder_open_outlined,
+                      title: 'No resources found',
+                      message: 'Try searching or explore subjects.',
                     );
                   }
 
@@ -327,6 +334,8 @@ class _FacultyResourceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      margin: EdgeInsets.zero,
+      elevation: 1,
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(

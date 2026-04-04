@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/widgets/ui_state_widgets.dart';
 import '../../../core/utils/app_logger.dart';
 import '../../auth/application/auth_controller.dart';
 import '../application/admin_controller.dart';
@@ -348,6 +349,8 @@ class _ResourceOverviewCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      margin: EdgeInsets.zero,
+      elevation: 1,
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
@@ -443,9 +446,11 @@ class _ErrorState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('Failed to load resources overview'),
-          const SizedBox(height: 8),
-          Text(message, textAlign: TextAlign.center),
+          const AppEmptyStateCard(
+            icon: Icons.error_outline,
+            title: 'Failed to load resources overview',
+            message: 'Please retry to continue.',
+          ),
           const SizedBox(height: 12),
           FilledButton(
             onPressed: onRetry,
@@ -470,7 +475,11 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('No resources found for selected filters'),
+          const AppEmptyStateCard(
+            icon: Icons.folder_open_outlined,
+            title: 'No resources found',
+            message: 'Try searching or explore subjects.',
+          ),
           const SizedBox(height: 12),
           OutlinedButton(
             onPressed: onRetry,

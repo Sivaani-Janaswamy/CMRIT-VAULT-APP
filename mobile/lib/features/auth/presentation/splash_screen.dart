@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../application/auth_controller.dart';
 import '../domain/auth_state.dart';
 import '../../../core/utils/app_logger.dart';
+import '../../../core/widgets/ui_state_widgets.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -54,9 +55,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
             : const Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  CircularProgressIndicator(),
+                  AppLoadingAnimation(size: 140),
                   SizedBox(height: 12),
-                  Text('Checking session...'),
+                  Text('Loading...'),
                 ],
               ),
       ),

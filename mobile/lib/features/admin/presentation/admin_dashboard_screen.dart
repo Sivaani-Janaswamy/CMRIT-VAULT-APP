@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/ui_state_widgets.dart';
 import '../../auth/application/auth_controller.dart';
 import '../application/admin_controller.dart';
 import '../domain/admin_dashboard_summary.dart';
@@ -42,16 +43,19 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
         ),
         title: const Text('Admin Dashboard'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final showControls = constraints.maxHeight > 120;
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (showControls) ...[
-                  Row(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const AppSectionHeader(title: 'Overview'),
+              const SizedBox(height: 10),
+              Card(
+                margin: EdgeInsets.zero,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
                     children: [
                       const Text('Period:'),
                       const SizedBox(width: 12),
@@ -82,132 +86,128 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
-                ],
-                Expanded(
-                  child: summaryAsync.when(
-                    loading: () => const Center(child: CircularProgressIndicator()),
-                    error: (error, _) => Center(
-                      child: SingleChildScrollView(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Text('Failed to load dashboard summary'),
-                            const SizedBox(height: 8),
-                            Text(error.toString(), textAlign: TextAlign.center),
-                            const SizedBox(height: 12),
-                            FilledButton(
-                              onPressed: () {
-                                ref.invalidate(adminDashboardSummaryProvider(_period));
-                              },
-                              child: const Text('Retry'),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    data: (summary) => _SummaryContent(summary: summary),
-                  ),
                 ),
-              ],
-            );
-          },
+              ),
+              const SizedBox(height: 12),
+              summaryAsync.when(
+                loading: () => const AppLoadingStateCard(
+                  label: 'Loading dashboard summary...',
+                ),
+                error: (error, _) => Column(
+                  children: [
+                    const AppEmptyStateCard(
+                      icon: Icons.error_outline,
+                      title: 'Failed to load dashboard summary',
+                      message: 'Please retry to continue.',
+                    ),
+                    const SizedBox(height: 12),
+                    FilledButton(
+                      onPressed: () {
+                        ref.invalidate(adminDashboardSummaryProvider(_period));
+                      },
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+                data: (summary) => _SummaryContent(summary: summary),
+              ),
+              const SizedBox(height: 16),
+              const AppSectionHeader(title: 'Actions'),
+              const SizedBox(height: 10),
+              _AdminActionCard(
+                icon: Icons.library_books,
+                title: 'Resources Overview',
+                subtitle: 'Review and moderate all resources',
+                color: AppColors.primary,
+                onTap: () => context.push('/admin/resources'),
+              ),
+              _AdminActionCard(
+                icon: Icons.upload_file,
+                title: 'Create Resource',
+                subtitle: 'Add and publish new content',
+                color: AppColors.primary,
+                onTap: () => context.push('/admin/resources/new'),
+              ),
+              _AdminActionCard(
+                icon: Icons.post_add,
+                title: 'Create Subject',
+                subtitle: 'Add a new subject entry',
+                color: AppColors.primary,
+                onTap: () => context.push('/admin/subjects/create'),
+              ),
+              _AdminActionCard(
+                icon: Icons.edit_note,
+                title: 'Manage Subjects',
+                subtitle: 'Edit and maintain subject catalog',
+                color: AppColors.primary,
+                onTap: () => context.push('/admin/subjects/manage'),
+              ),
+              _AdminActionCard(
+                icon: Icons.analytics_outlined,
+                title: 'Downloads Overview',
+                subtitle: 'Monitor download trends',
+                color: AppColors.highlightOrange,
+                onTap: () => context.push('/admin/downloads'),
+              ),
+              _AdminActionCard(
+                icon: Icons.fact_check_outlined,
+                title: 'Downloads Audit',
+                subtitle: 'Inspect detailed download logs',
+                color: AppColors.highlightOrange,
+                onTap: () => context.push('/admin/downloads/audit'),
+              ),
+              _AdminActionCard(
+                icon: Icons.manage_accounts,
+                title: 'Users Management',
+                subtitle: 'Manage roles and account states',
+                color: AppColors.highlightGreen,
+                onTap: () => context.push('/admin/users'),
+              ),
+              _AdminActionCard(
+                icon: Icons.sync,
+                title: 'Search Reindex',
+                subtitle: 'Trigger admin recovery/backfill index jobs',
+                color: AppColors.highlightGreen,
+                onTap: () => context.push('/admin/search/reindex'),
+              ),
+            ],
+          ),
         ),
       ),
-      bottomNavigationBar: SafeArea(
-        minimum: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: AppColors.text,
-                minimumSize: const Size.fromHeight(48),
-              ),
-              onPressed: () => context.push('/admin/resources'),
-              icon: const Icon(Icons.library_books),
-              label: const Text('Resources Overview'),
-            ),
-            const SizedBox(height: 8),
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: AppColors.text,
-                minimumSize: const Size.fromHeight(48),
-              ),
-              onPressed: () => context.push('/admin/resources/new'),
-              icon: const Icon(Icons.upload_file),
-              label: const Text('Create Resource'),
-            ),
-            const SizedBox(height: 8),
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.highlightOrange,
-                foregroundColor: AppColors.text,
-                minimumSize: const Size.fromHeight(48),
-              ),
-              onPressed: () => context.push('/admin/downloads'),
-              icon: const Icon(Icons.analytics_outlined),
-              label: const Text('Downloads Overview'),
-            ),
-            const SizedBox(height: 8),
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.highlightOrange,
-                foregroundColor: AppColors.text,
-                minimumSize: const Size.fromHeight(48),
-              ),
-              onPressed: () => context.push('/admin/downloads/audit'),
-              icon: const Icon(Icons.fact_check_outlined),
-              label: const Text('Downloads Audit'),
-            ),
-            const SizedBox(height: 8),
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.highlightGreen,
-                foregroundColor: AppColors.text,
-                minimumSize: const Size.fromHeight(48),
-              ),
-              onPressed: () => context.push('/admin/users'),
-              icon: const Icon(Icons.manage_accounts),
-              label: const Text('Users Management'),
-            ),
-            const SizedBox(height: 8),
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: AppColors.text,
-                minimumSize: const Size.fromHeight(48),
-              ),
-              onPressed: () => context.push('/admin/subjects/create'),
-              icon: const Icon(Icons.post_add),
-              label: const Text('Create Subject'),
-            ),
-            const SizedBox(height: 8),
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: AppColors.text,
-                minimumSize: const Size.fromHeight(48),
-              ),
-              onPressed: () => context.push('/admin/subjects/manage'),
-              icon: const Icon(Icons.edit_note),
-              label: const Text('Manage Subjects'),
-            ),
-            const SizedBox(height: 8),
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.highlightGreen,
-                foregroundColor: AppColors.text,
-                minimumSize: const Size.fromHeight(48),
-              ),
-              onPressed: () => context.push('/admin/search/reindex'),
-              icon: const Icon(Icons.sync),
-              label: const Text('Search Reindex'),
-            ),
-          ],
+    );
+  }
+}
+
+class _AdminActionCard extends StatelessWidget {
+  const _AdminActionCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.color,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 10),
+      elevation: 1,
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: color,
+          foregroundColor: AppColors.text,
+          child: Icon(icon),
         ),
+        title: Text(title),
+        subtitle: Text(subtitle),
+        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+        onTap: onTap,
       ),
     );
   }
@@ -222,7 +222,7 @@ class _SummaryContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
+    return Column(
       children: [
         _SummaryCard(
           title: 'Users',
@@ -283,7 +283,8 @@ class _SummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 10),
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 1,
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(

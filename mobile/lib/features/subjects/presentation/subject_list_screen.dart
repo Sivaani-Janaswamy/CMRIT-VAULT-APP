@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/ui_state_widgets.dart';
 import '../application/subjects_controller.dart';
 import '../domain/subject.dart';
 
@@ -30,13 +31,19 @@ class SubjectListScreen extends ConsumerWidget {
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: subjectsAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (_, __) => const Center(
-            child: Text('Something went wrong'),
+          loading: () => const AppLoadingStateCard(label: 'Loading subjects...'),
+          error: (_, __) => const AppEmptyStateCard(
+            icon: Icons.error_outline,
+            title: 'Unable to load subjects',
+            message: 'Please try again in a moment.',
           ),
           data: (page) {
             if (page.items.isEmpty) {
-              return const Center(child: Text('No data available'));
+              return const AppEmptyStateCard(
+                icon: Icons.menu_book_outlined,
+                title: 'No subjects found',
+                message: 'Try again after new subjects are published.',
+              );
             }
 
             return ListView.separated(
@@ -72,6 +79,8 @@ class _SubjectCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      margin: EdgeInsets.zero,
+      elevation: 1,
       child: ListTile(
         onTap: onTap,
         leading: const Icon(
