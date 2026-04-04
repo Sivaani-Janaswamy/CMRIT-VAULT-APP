@@ -167,9 +167,9 @@ export async function updateAdminUserStatusHandler(
     logDebug('PATCH /v1/admin/users/:id/status received', {
       userId: authUser.id,
       targetUserId: id,
-      isActive: body.isActive
+      isActive: body.is_active
     });
-    const user = await usersService.updateAdminUserStatus(authUser.id, id, body.isActive);
+    const user = await usersService.updateAdminUserStatus(authUser.id, id, body.is_active);
     logDebug('PATCH /v1/admin/users/:id/status success', {
       userId: authUser.id,
       targetUserId: user.id,

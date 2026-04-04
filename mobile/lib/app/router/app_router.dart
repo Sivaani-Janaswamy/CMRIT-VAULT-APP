@@ -12,8 +12,14 @@ import '../../features/auth/presentation/signup_screen.dart';
 import '../../features/auth/presentation/splash_screen.dart';
 import '../../features/admin/presentation/admin_access_denied_view.dart';
 import '../../features/admin/presentation/admin_dashboard_screen.dart';
+import '../../features/admin/presentation/admin_create_subject_screen.dart';
+import '../../features/admin/presentation/admin_download_audit_screen.dart';
 import '../../features/admin/presentation/admin_downloads_overview_screen.dart';
 import '../../features/admin/presentation/admin_resources_overview_screen.dart';
+import '../../features/admin/presentation/admin_search_reindex_screen.dart';
+import '../../features/admin/presentation/admin_user_detail_screen.dart';
+import '../../features/admin/presentation/admin_subject_edit_screen.dart';
+import '../../features/admin/presentation/admin_users_screen.dart';
 import '../../features/faculty/presentation/faculty_access_denied_view.dart';
 import '../../features/faculty/presentation/faculty_dashboard_screen.dart';
 import '../../features/faculty/presentation/faculty_resource_form_screen.dart';
@@ -153,6 +159,91 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           }
           return isAdmin
               ? const AdminDownloadsOverviewScreen()
+              : const AdminAccessDeniedView();
+        },
+      ),
+      GoRoute(
+        path: '/admin/downloads/audit',
+        builder: (context, state) {
+          final isAdmin = authState.user?.role == 'admin';
+          if (kDebugMode) {
+            appLog(
+              'GoRouter.admin/downloads/audit guard: role=${authState.user?.role ?? "none"} access=${isAdmin ? "allowed" : "denied"}',
+            );
+          }
+          return isAdmin
+              ? const AdminDownloadAuditScreen()
+              : const AdminAccessDeniedView();
+        },
+      ),
+      GoRoute(
+        path: '/admin/users',
+        builder: (context, state) {
+          final isAdmin = authState.user?.role == 'admin';
+          if (kDebugMode) {
+            appLog(
+              'GoRouter.admin/users guard: role=${authState.user?.role ?? "none"} access=${isAdmin ? "allowed" : "denied"}',
+            );
+          }
+          return isAdmin
+              ? const AdminUsersScreen()
+              : const AdminAccessDeniedView();
+        },
+      ),
+      GoRoute(
+        path: '/admin/users/:userId',
+        builder: (context, state) {
+          final isAdmin = authState.user?.role == 'admin';
+          final userId = state.pathParameters['userId'] ?? '';
+          if (kDebugMode) {
+            appLog(
+              'GoRouter.admin/users/:userId guard: role=${authState.user?.role ?? "none"} access=${isAdmin ? "allowed" : "denied"}',
+            );
+          }
+          return isAdmin
+              ? AdminUserDetailScreen(userId: userId)
+              : const AdminAccessDeniedView();
+        },
+      ),
+      GoRoute(
+        path: '/admin/subjects/create',
+        builder: (context, state) {
+          final isAdmin = authState.user?.role == 'admin';
+          if (kDebugMode) {
+            appLog(
+              'GoRouter.admin/subjects/create guard: role=${authState.user?.role ?? "none"} access=${isAdmin ? "allowed" : "denied"}',
+            );
+          }
+          return isAdmin
+              ? const AdminCreateSubjectScreen()
+              : const AdminAccessDeniedView();
+        },
+      ),
+      GoRoute(
+        path: '/admin/subjects/manage',
+        builder: (context, state) {
+          final isAdmin = authState.user?.role == 'admin';
+          if (kDebugMode) {
+            appLog(
+              'GoRouter.admin/subjects/manage guard: role=${authState.user?.role ?? "none"} access=${isAdmin ? "allowed" : "denied"}',
+            );
+          }
+          return isAdmin
+              ? const AdminSubjectEditScreen()
+              : const AdminAccessDeniedView();
+        },
+      ),
+      GoRoute(
+        path: '/admin/search/reindex',
+        builder: (context, state) {
+          final isAdmin = authState.user?.role == 'admin';
+          if (kDebugMode) {
+            appLog(
+              'GoRouter.admin/search/reindex guard: role=${authState.user?.role ?? "none"} access=${isAdmin ? "allowed" : "denied"}',
+            );
+          }
+          return isAdmin
+              ? const AdminSearchReindexScreen()
               : const AdminAccessDeniedView();
         },
       ),

@@ -42,7 +42,7 @@ export interface UpdateUserRoleInput {
 }
 
 export interface UpdateUserStatusInput {
-  isActive: boolean;
+  is_active: boolean;
 }
 
 export interface UserAccessContext {

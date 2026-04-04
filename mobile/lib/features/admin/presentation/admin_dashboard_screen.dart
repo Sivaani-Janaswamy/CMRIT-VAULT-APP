@@ -73,20 +73,22 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
               child: summaryAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (error, _) => Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text('Failed to load dashboard summary'),
-                      const SizedBox(height: 8),
-                      Text(error.toString(), textAlign: TextAlign.center),
-                      const SizedBox(height: 12),
-                      FilledButton(
-                        onPressed: () {
-                          ref.invalidate(adminDashboardSummaryProvider(_period));
-                        },
-                        child: const Text('Retry'),
-                      ),
-                    ],
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('Failed to load dashboard summary'),
+                        const SizedBox(height: 8),
+                        Text(error.toString(), textAlign: TextAlign.center),
+                        const SizedBox(height: 12),
+                        FilledButton(
+                          onPressed: () {
+                            ref.invalidate(adminDashboardSummaryProvider(_period));
+                          },
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 data: (summary) => _SummaryContent(summary: summary),
@@ -120,6 +122,61 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
               onPressed: () => context.push('/admin/downloads'),
               icon: const Icon(Icons.analytics_outlined),
               label: const Text('Downloads Overview'),
+            ),
+            const SizedBox(height: 8),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.highlightOrange,
+                foregroundColor: AppColors.text,
+                minimumSize: const Size.fromHeight(48),
+              ),
+              onPressed: () => context.push('/admin/downloads/audit'),
+              icon: const Icon(Icons.fact_check_outlined),
+              label: const Text('Downloads Audit'),
+            ),
+            const SizedBox(height: 8),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.highlightGreen,
+                foregroundColor: AppColors.text,
+                minimumSize: const Size.fromHeight(48),
+              ),
+              onPressed: () => context.push('/admin/users'),
+              icon: const Icon(Icons.manage_accounts),
+              label: const Text('Users Management'),
+            ),
+            const SizedBox(height: 8),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.text,
+                minimumSize: const Size.fromHeight(48),
+              ),
+              onPressed: () => context.push('/admin/subjects/create'),
+              icon: const Icon(Icons.post_add),
+              label: const Text('Create Subject'),
+            ),
+            const SizedBox(height: 8),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.text,
+                minimumSize: const Size.fromHeight(48),
+              ),
+              onPressed: () => context.push('/admin/subjects/manage'),
+              icon: const Icon(Icons.edit_note),
+              label: const Text('Manage Subjects'),
+            ),
+            const SizedBox(height: 8),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.highlightGreen,
+                foregroundColor: AppColors.text,
+                minimumSize: const Size.fromHeight(48),
+              ),
+              onPressed: () => context.push('/admin/search/reindex'),
+              icon: const Icon(Icons.sync),
+              label: const Text('Search Reindex'),
             ),
           ],
         ),

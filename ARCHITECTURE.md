@@ -319,11 +319,11 @@ Any new feature should reuse these contracts instead of introducing parallel con
 | Area | Current State |
 |---|---|
 | Backend | Node.js API scaffold exists with auth, users, subjects, resources, downloads, search, faculty, and admin modules |
-| Mobile | Flutter app includes Supabase auth bootstrap and role-aware routing with student browsing, faculty dashboard/resources lifecycle/stats, and admin analytics/moderation surfaces |
+| Mobile | Flutter app includes Supabase auth bootstrap and role-aware routing with student browsing, faculty dashboard/resources lifecycle/stats, and expanded admin surfaces (analytics/moderation, users list/detail role-status management, subject create/manage, downloads audit, and search reindex action) |
 | Schema reference | `DATABASE_DESIGN.md` is the canonical schema file |
-| Search | Algolia-backed read-model implemented; mobile/web search surfaces still planned |
+| Search | Algolia-backed read-model implemented; mobile search + suggestions UI is implemented, web search UI is still planned |
 | Faculty dashboard | Backend faculty endpoints implemented; mobile faculty dashboard/resources lifecycle/stats UI is implemented, web faculty UI still planned |
-| Admin analytics | Backend admin summary/resources overview/downloads overview endpoints implemented; mobile admin UI is implemented, web admin UI still planned |
+| Admin analytics | Backend admin summary/resources overview/downloads overview endpoints implemented; mobile admin analytics + management UI is implemented, web admin UI still planned |
 | Resources and downloads backend modules | Implemented; only client screens and refinements remain |
 | Web frontend | Next.js scaffold exists; production screens and backend integration remain |
 

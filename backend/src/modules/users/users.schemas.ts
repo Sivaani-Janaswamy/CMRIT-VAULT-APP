@@ -45,6 +45,6 @@ export const updateUserRoleSchema = z
 
 export const updateUserStatusSchema = z
   .object({
-    isActive: z.boolean()
+    is_active: z.boolean()
   })
   .strict();

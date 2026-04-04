@@ -108,6 +108,25 @@ class BackendApiService {
     );
   }
 
+  Future<Map<String, dynamic>> fetchSubjectById(String subjectId) async {
+    appLog('BackendApiService.fetchSubjectById(): start subjectId=$subjectId');
+    final response = await _request(
+      method: 'GET',
+      path: '/v1/subjects/$subjectId',
+    );
+
+    final data = response['data'];
+    if (data is Map<String, dynamic>) {
+      final subject = data['subject'];
+      if (subject is Map<String, dynamic>) {
+        appLog('BackendApiService.fetchSubjectById(): success');
+        return subject;
+      }
+    }
+
+    throw const FormatException('Invalid /v1/subjects/:id response');
+  }
+
   Future<Map<String, dynamic>> fetchResources({
     required String subjectId,
     int page = 1,
@@ -242,6 +261,17 @@ class BackendApiService {
     );
   }
 
+  Future<Map<String, dynamic>> fetchAdminDownloadsAudit({
+    Map<String, String>? filters,
+  }) {
+    appLog('BackendApiService.fetchAdminDownloadsAudit(): start');
+    return _request(
+      method: 'GET',
+      path: '/v1/admin/downloads',
+      queryParameters: filters,
+    );
+  }
+
   Future<Map<String, dynamic>> updateAdminResourceStatus({
     required String resourceId,
     required String status,
@@ -255,6 +285,131 @@ class BackendApiService {
       body: {
         'status': status,
       },
+    );
+  }
+
+  Future<Map<String, dynamic>> fetchAdminUsers({
+    Map<String, String>? filters,
+  }) {
+    appLog('BackendApiService.fetchAdminUsers(): start');
+    return _request(
+      method: 'GET',
+      path: '/v1/admin/users',
+      queryParameters: filters,
+    );
+  }
+
+  Future<Map<String, dynamic>> fetchAdminUserById({
+    required String userId,
+  }) {
+    appLog('BackendApiService.fetchAdminUserById(): start userId=$userId');
+    return _request(
+      method: 'GET',
+      path: '/v1/admin/users/$userId',
+    );
+  }
+
+  Future<Map<String, dynamic>> updateAdminUserRole({
+    required String userId,
+    required String role,
+  }) {
+    appLog('BackendApiService.updateAdminUserRole(): start userId=$userId role=$role');
+    return _request(
+      method: 'PATCH',
+      path: '/v1/admin/users/$userId/role',
+      body: {
+        'role': role,
+      },
+    );
+  }
+
+  Future<Map<String, dynamic>> updateAdminUserStatus({
+    required String userId,
+    required bool isActive,
+  }) {
+    appLog('BackendApiService.updateAdminUserStatus(): start userId=$userId isActive=$isActive');
+    return _request(
+      method: 'PATCH',
+      path: '/v1/admin/users/$userId/status',
+      body: {
+        'is_active': isActive,
+      },
+    );
+  }
+
+  Future<Map<String, dynamic>> createAdminSubject({
+    required String code,
+    required String name,
+    required String department,
+    required int semester,
+    bool? isActive,
+  }) {
+    appLog('BackendApiService.createAdminSubject(): start code=$code');
+    final body = <String, dynamic>{
+      'code': code,
+      'name': name,
+      'department': department,
+      'semester': semester,
+    };
+    if (isActive != null) {
+      body['isActive'] = isActive;
+    }
+
+    return _request(
+      method: 'POST',
+      path: '/v1/admin/subjects',
+      body: body,
+    );
+  }
+
+  Future<Map<String, dynamic>> updateAdminSubject({
+    required String subjectId,
+    String? code,
+    String? name,
+    String? department,
+    int? semester,
+    bool? isActive,
+  }) {
+    appLog('BackendApiService.updateAdminSubject(): start subjectId=$subjectId');
+    final body = <String, dynamic>{};
+    if (code != null) {
+      body['code'] = code;
+    }
+    if (name != null) {
+      body['name'] = name;
+    }
+    if (department != null) {
+      body['department'] = department;
+    }
+    if (semester != null) {
+      body['semester'] = semester;
+    }
+    if (isActive != null) {
+      body['isActive'] = isActive;
+    }
+
+    return _request(
+      method: 'PATCH',
+      path: '/v1/admin/subjects/$subjectId',
+      body: body,
+    );
+  }
+
+  Future<Map<String, dynamic>> deleteAdminSubject({
+    required String subjectId,
+  }) {
+    appLog('BackendApiService.deleteAdminSubject(): start subjectId=$subjectId');
+    return _request(
+      method: 'DELETE',
+      path: '/v1/admin/subjects/$subjectId',
+    );
+  }
+
+  Future<Map<String, dynamic>> triggerAdminSearchReindex() {
+    appLog('BackendApiService.triggerAdminSearchReindex(): start');
+    return _request(
+      method: 'POST',
+      path: '/v1/admin/search/reindex',
     );
   }
 

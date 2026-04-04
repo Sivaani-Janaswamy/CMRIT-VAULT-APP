@@ -35,6 +35,11 @@ class SubjectsRepository {
     return _parsePaginated(response, ResourceItem.fromJson);
   }
 
+  Future<Subject> fetchSubjectById(String subjectId) async {
+    final subjectJson = await apiService.fetchSubjectById(subjectId);
+    return Subject.fromJson(subjectJson);
+  }
+
   Future<ResourceItem> fetchResourceById(String resourceId) async {
     final response = await apiService.fetchResourceById(resourceId);
     final data = _extractData(response);

@@ -116,13 +116,13 @@ Faculty endpoint note: `/v1/faculty/*` may include faculty-owned archived resour
 | Sign up screen | Supabase signup + backend auth sync flow | ✅ | Minimal functional signup UI |
 | Home screen | `/v1/users/me` via auth controller | ✅ | Authenticated state, logout, and Browse Subjects entry point are wired |
 | Subject list | `/v1/subjects` | ✅ | Implemented with list UI, loading/empty/error states |
-| Subject detail | `/v1/resources?subjectId=...` | ✅ | Implemented as subject resource list |
+| Subject detail | `/v1/subjects/:id` + `/v1/resources?subjectId=...` | ✅ | Subject metadata and resource list are implemented |
 | Notes list/detail | `/v1/resources`, `/v1/resources/:id` | ✅ | Resource list and detail screen implemented |
 | Downloads history | `/v1/downloads/me` | ✅ | Read-only history list implemented |
-| Search screen | `/v1/search/resources` | ✅ | Implemented with submit-to-search UI and tappable results |
+| Search screen | `/v1/search/resources`, `/v1/search/suggest` | ✅ | Search + autocomplete suggestions are implemented |
 | Download action (resource detail) | `POST /v1/resources/:id/download-url` | ✅ | Signed URL request opens natively; clipboard fallback remains for devices that cannot launch the URL |
 | Faculty dashboard | `/v1/faculty/*` | ✅ | Implemented with role-aware route guard, dashboard summary, resources list, create/edit form, submit/archive actions, and per-resource stats |
-| Admin panel | `/v1/admin/*` | ✅ | Implemented with role-aware route guard, dashboard summary, resources overview, downloads overview, and moderation actions |
+| Admin panel | `/v1/admin/*` | ✅ | Implemented with role-aware route guard, dashboard summary, resources overview, downloads overview + audit, users list/detail role/status actions, subject create/update/delete screens, and search reindex action |
 
 ### Mobile Structure Status
 
@@ -131,7 +131,7 @@ Faculty endpoint note: `/v1/faculty/*` may include faculty-owned archived resour
 | Riverpod state management | ✅ | Auth controller and providers exist |
 | `go_router` navigation | ✅ | Splash -> Login -> Signup -> Home + Subjects + Resource detail + Downloads + Search + Admin routes + Faculty routes |
 | Supabase bootstrap | ✅ | Initialized in app startup |
-| Backend API client | ✅ | Thin HTTP wrapper includes subjects/resources/download-url/downloads-history/search plus admin and faculty summary/overview/lifecycle/stats methods |
+| Backend API client | ✅ | Thin HTTP wrapper includes subjects/resources/download-url/downloads-history/search plus admin/faculty endpoints including admin users, admin subjects CRUD actions, downloads audit, and search reindex |
 | Feature-based structure | ✅ | Auth, home, subjects/resources, downloads-history, search, admin, and faculty modules are organized |
 
 ## 5. Frontend (Web)
@@ -158,7 +158,7 @@ Faculty endpoint note: `/v1/faculty/*` may include faculty-owned archived resour
 | Feature | Backend | Mobile | Web | Status |
 | --- | --- | --- | --- | --- |
 | Auth bootstrap | ✅ | ✅ | ⚠️ | Backend and mobile exist; web scaffold exists but auth pages are missing |
-| Users profile | ✅ | ❌ | ❌ | Web profile flow missing |
+| Users profile | ✅ | ✅ | ❌ | Mobile profile edit/update is implemented; web profile flow remains missing |
 | Subjects browsing | ✅ | ✅ | ❌ | Mobile subject list + subject resource browsing are implemented |
 | Resources lifecycle | ✅ | ✅ | ❌ | Backend lifecycle is complete; mobile supports faculty create/update/submit/archive and admin moderation |
 | Downloads tracking | ✅ | ✅ | ❌ | Backend endpoints are implemented; mobile history and native open/download UX are implemented; web history remains pending |
@@ -178,7 +178,7 @@ Faculty endpoint note: `/v1/faculty/*` may include faculty-owned archived resour
 | Admin module | Dedicated admin module exists for analytics and moderation; mobile admin client surfaces are implemented and web admin is pending | Admin operations are now user-facing on mobile, but web parity is missing | Implement web admin screens and workflows |
 | Web backend integration | Next.js exists but is still starter-only | Web cannot consume auth/profile APIs yet | Add typed backend client and auth bootstrap flow |
 | Mobile content browsing | Subjects/resources browsing, downloads history, and search are implemented | Core browsing and download consumption work, and discovery is now available on mobile | Focus next on web discovery surfaces |
-| API contract coverage | Auth/users/subjects/resources/downloads/faculty/search/admin backend endpoints are implemented | Client adoption is still incomplete for faculty and web admin/dashboard surfaces | Prioritize faculty client screens and web dashboard/admin/search surfaces next |
+| API contract coverage | Auth/users/subjects/resources/downloads/faculty/search/admin backend endpoints are implemented | Mobile adoption now covers core student/faculty/admin user-facing flows; remaining parity gaps are primarily web and optional admin single-resource reindex UX | Prioritize web dashboard/admin/search surfaces next |
 
 ## 8. Technical Debt
 
@@ -218,7 +218,7 @@ Faculty endpoint note: `/v1/faculty/*` may include faculty-owned archived resour
 
 | Item | Scope | Dependency |
 | --- | --- | --- |
-| Mobile UI completion | ✅ Subjects + resources browsing, downloads history, and search implemented | Phase 1 APIs |
+| Mobile UI completion | ✅ Subjects + resources browsing, downloads history, search + suggestions, profile edit/update, faculty lifecycle/stats, and expanded admin surfaces (users detail/manage, subjects create/manage, downloads audit, search reindex) implemented | Phase 1 APIs |
 | Web UI pages | Next.js pages for auth/content browsing | Phase 1 APIs + backend client |
 | Resource browsing + filtering | Subject, year, semester, type filters | Resources module |
 
