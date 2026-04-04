@@ -138,26 +138,26 @@ Faculty endpoint note: `/v1/faculty/*` may include faculty-owned archived resour
 
 | Screen | API Used | Implemented? | Notes |
 | --- | --- | --- | --- |
-| App shell | N/A | ⚠️ | Next.js App Router scaffold exists, but it still contains starter template content |
-| Login | N/A | ❌ | Not implemented |
-| Dashboard | N/A | ❌ | Not implemented |
-| Notes browsing | N/A | ❌ | Not implemented |
-| Search | N/A | ❌ | Not implemented |
-| Admin panel | N/A | ❌ | Not implemented |
+| App shell | N/A | ✅ | CMRIT Vault landing shell, navigation, design tokens, and hero assets are implemented |
+| Login | N/A | ⚠️ | UI page is implemented; Supabase + backend sync wiring is pending |
+| Dashboard | N/A | ⚠️ | Route scaffolds exist for student/faculty/admin; data integration is pending |
+| Notes browsing | N/A | ⚠️ | Placeholder route exists; API-backed notes browsing is pending |
+| Search | N/A | ⚠️ | Placeholder route exists; API-backed search/suggestions are pending |
+| Admin panel | N/A | ⚠️ | Guarded admin route scaffold exists; analytics/workflow integration is pending |
 
 ### Frontend Structure Status
 
 | Area | Status | Notes |
 | --- | --- | --- |
 | `frontend/` folder | ✅ | Folder exists with Next.js project scaffold |
-| Next.js setup | ✅ | App Router scaffold is initialized |
-| API integration layer | ❌ | Missing backend client, auth sync, and feature service layer |
+| Next.js setup | ✅ | App Router scaffold is initialized with custom shell and auth pages |
+| API integration layer | ⚠️ | Base env config and typed HTTP client exist; auth sync and feature services are pending |
 
 ## 6. Feature Completeness Matrix
 
 | Feature | Backend | Mobile | Web | Status |
 | --- | --- | --- | --- | --- |
-| Auth bootstrap | ✅ | ✅ | ⚠️ | Backend and mobile exist; web scaffold exists but auth pages are missing |
+| Auth bootstrap | ✅ | ✅ | ⚠️ | Web login/signup UI and route scaffolds are implemented; auth/session wiring is pending |
 | Users profile | ✅ | ✅ | ❌ | Mobile profile edit/update is implemented; web profile flow remains missing |
 | Subjects browsing | ✅ | ✅ | ❌ | Mobile subject list + subject resource browsing are implemented |
 | Resources lifecycle | ✅ | ✅ | ❌ | Backend lifecycle is complete; mobile supports faculty create/update/submit/archive and admin moderation |
@@ -165,7 +165,7 @@ Faculty endpoint note: `/v1/faculty/*` may include faculty-owned archived resour
 | Search | ✅ | ✅ | ❌ | Backend Algolia search is implemented; mobile search screen is implemented; web search remains missing |
 | Faculty dashboard | ✅ | ✅ | ❌ | ⚠️ Backend faculty endpoints are implemented; mobile dashboard/resources/stats are live, web faculty UI is pending |
 | Admin panel | ✅ | ✅ | ❌ | ⚠️ Backend admin analytics endpoints are implemented; mobile admin UI is live, web admin UI is pending |
-| App shell / navigation | ✅ | ✅ | ⚠️ | Web has a starter App Router scaffold, but production navigation/auth routes are missing |
+| App shell / navigation | ✅ | ✅ | ✅ | Web app shell, content-first nav, and auth action buttons are implemented |
 
 ## 7. Architectural Gaps
 
@@ -176,7 +176,7 @@ Faculty endpoint note: `/v1/faculty/*` may include faculty-owned archived resour
 | Download UX | Mobile now opens signed URLs natively with clipboard fallback when device launch fails | Fallback/error messaging can still be improved | Keep native-first behavior and refine user-facing failure messaging |
 | Search client surfaces | Backend Algolia search exists; mobile search is implemented; web search is still missing | Discovery UX is still missing on web | Add web search screens, filters, and suggestion UI |
 | Admin module | Dedicated admin module exists for analytics and moderation; mobile admin client surfaces are implemented and web admin is pending | Admin operations are now user-facing on mobile, but web parity is missing | Implement web admin screens and workflows |
-| Web backend integration | Next.js exists but is still starter-only | Web cannot consume auth/profile APIs yet | Add typed backend client and auth bootstrap flow |
+| Web backend integration | Base web API client and env config are implemented, but feature integration is incomplete | Web can start consuming APIs but auth/profile/services are not wired yet | Implement auth/session flow and feature-specific services next |
 | Mobile content browsing | Subjects/resources browsing, downloads history, and search are implemented | Core browsing and download consumption work, and discovery is now available on mobile | Focus next on web discovery surfaces |
 | API contract coverage | Auth/users/subjects/resources/downloads/faculty/search/admin backend endpoints are implemented | Mobile adoption now covers core student/faculty/admin user-facing flows; remaining parity gaps are primarily web and optional admin single-resource reindex UX | Prioritize web dashboard/admin/search surfaces next |
 
@@ -185,7 +185,7 @@ Faculty endpoint note: `/v1/faculty/*` may include faculty-owned archived resour
 | Area | Issue | Risk | Fix |
 | --- | --- | --- | --- |
 | Mobile feature depth | Subjects/resources browsing, downloads history, search, admin panel, and faculty lifecycle/stats are implemented | Primary remaining client imbalance is now web parity by role | Continue role-surface parity work on web |
-| Web app state | Starter Next.js page still shows template content | Production confusion and weak brand identity | Replace starter page with CMRIT Vault app shell and auth-aware layout |
+| Web app state | App shell and auth page UI exist, but data-backed features are still scaffolded | Users may assume pages are functional before integrations are complete | Prioritize auth wiring and student feature integrations next |
 | Backend module surface | Core backend modules including admin are implemented | Remaining risk is client adoption and operational hardening | Focus on client integration + production hardening |
 | Shared API contracts | No shared API DTO package between mobile and web | Drift risk across clients | Introduce a stable response/types layer if needed later |
 | Content lifecycle | Mobile browsing plus native download flow, search, admin moderation, and faculty lifecycle are available | UX is strong on mobile but still not complete on web role surfaces | Build web role surfaces next |
@@ -195,7 +195,7 @@ Faculty endpoint note: `/v1/faculty/*` may include faculty-owned archived resour
 | Risk | Area | Severity | Mitigation |
 | --- | --- | --- | --- |
 | Schema drift | Backend DB access | High | Keep code aligned to `DATABASE_DESIGN.md` and review queries against the schema |
-| Starter frontend exposure | Web | Medium | Replace template UI before user-facing release |
+| Partial frontend feature wiring | Web | Medium | Complete auth/session integration and replace placeholders with API-backed screens |
 | Download fallback UX gap | Mobile | Low | Improve fallback and error messages when automatic URL launch is unavailable |
 | Download history UX gap | Mobile/Web | Medium | Implement web downloads history and signed URL consumption flows |
 | Client search UX gap | Web | Medium | Add web search screens and connect them to the backend search APIs |
@@ -282,8 +282,8 @@ Faculty endpoint note: `/v1/faculty/*` may include faculty-owned archived resour
 | 1 | ✅ Implement downloads module | Backend | Completed and validated |
 | 2 | ✅ Add mobile subject/resource browsing flow | Mobile | Completed and manually validated on emulator |
 | 3 | ✅ Implement native download completion UX from resource detail | Mobile | Signed URLs now open natively with a clipboard fallback |
-| 4 | Replace Next.js starter page and add landing/auth shell | Web | Landing/home surfaces are still missing |
-| 5 | Build web admin client surfaces | Web | Backend admin module is ready and mobile is implemented; web user-facing admin workflows are pending |
+| 4 | ✅ Replace Next.js starter page and add landing/auth shell | Web | Completed with content-first navigation and auth UI pages |
+| 5 | Wire web auth/session to Supabase + backend sync | Web | Required to unlock all protected web flows |
 | 6 | Add production hardening | Cross-cutting | Needed before scaling beyond MVP usage |
 
 ## 13. Execution Plan (Single Source of Truth)
@@ -296,7 +296,7 @@ Faculty endpoint note: `/v1/faculty/*` may include faculty-owned archived resour
 | 4 | ✅ Build downloads module | Backend | Completed and validated |
 | 5 | ✅ Implement mobile subject + resource browsing | Mobile | Implemented and tested |
 | 6 | ✅ Implement native download completion UX (open/download file from signed URL) | Mobile | Signed URLs now open natively with a clipboard fallback |
-| 7 | Replace Next.js starter UI with landing/auth shell + API client bootstrap | Web | Home/landing surfaces are still missing |
+| 7 | ✅ Replace Next.js starter UI with landing/auth shell + API client bootstrap | Web | Completed foundation and UI scaffold |
 | 8 | Build web admin client panel | Web | Backend admin APIs exist; web client integration is the remaining work |
 | 9 | Add pagination, logging, monitoring | All | Production readiness |
 
@@ -308,8 +308,83 @@ When redesign work is scheduled, include these requirements:
 
 | Area | Requirement | Priority |
 | --- | --- | --- |
-| Web landing | Build a proper landing/home experience (replace Next.js starter template) | High |
+| Web landing | Keep current landing shell and evolve it with live API-driven cards | Medium |
 | Mobile home | Expand home from utility entry screen to role-aware dashboard sections (student/faculty/admin quick actions) | Medium |
 | Download UX | Keep native open/download flow and improve fallback/error messaging for launch failures and expired links | Medium |
 | Empty/error states | Keep current simple states, but add contextual actions (retry, back, open settings) | Medium |
 | Design system | Consolidate colors/typography/components into a reusable token + component pattern across screens | Medium |
+
+## 15. Web Implementation Order Checklist (Approval-Gated)
+
+Use this checklist as the execution order for web implementation.
+
+Rules:
+- Each item remains unchecked until implementation is complete and you explicitly approve it.
+- If an item is blocked by API or UX issues, note the blocker below the item before proceeding.
+- Do not start a later phase unless all mandatory items in the current phase are approved.
+
+### Phase A: Foundation
+
+- [x] A1. Replace Next.js starter page with CMRIT Vault app shell (branding, layout, navigation placeholders)
+- [x] A2. Create shared design tokens/components aligned to mobile style (colors, typography, spacing, cards, buttons, states)
+- [x] A3. Set up web env/config and typed API client bootstrap (`API_BASE_URL`, auth headers, error normalization)
+- [x] A4. Add route structure and role-aware route guards (public, student, faculty, admin)
+
+### Phase B: Auth and Session
+
+- [ ] B1. Implement login page (Supabase auth + backend sync)
+- [ ] B2. Implement signup page (Supabase auth + backend sync)
+- [ ] B3. Implement session bootstrap/restore on refresh
+- [ ] B4. Implement logout and auth error recovery UX
+
+Phase B note:
+- Login/signup UI layout and spacing are completed and approved.
+- Functional auth wiring remains pending for B1-B4 completion.
+
+### Phase C: Student Core Flows
+
+- [ ] C1. Implement subjects list page (`GET /v1/subjects`)
+- [ ] C2. Implement subject detail page (`GET /v1/subjects/:id`)
+- [ ] C3. Implement resources list + filters for subject (`GET /v1/resources`)
+- [ ] C4. Implement resource detail page (`GET /v1/resources/:id`)
+- [ ] C5. Implement download action from resource detail (`POST /v1/resources/:id/download-url`)
+- [ ] C6. Implement downloads history page (`GET /v1/downloads/me`)
+
+### Phase D: Search and Discovery
+
+- [ ] D1. Implement search input with autocomplete suggestions (`GET /v1/search/suggest`)
+- [ ] D2. Implement search results page (`GET /v1/search/resources`)
+- [ ] D3. Add search filters, empty states, and no-results UX
+
+### Phase E: Faculty Web Surfaces
+
+- [ ] E1. Implement faculty dashboard summary (`GET /v1/faculty/dashboard/summary`)
+- [ ] E2. Implement faculty resources list (`GET /v1/faculty/resources`)
+- [ ] E3. Implement faculty create/edit form for resources
+- [ ] E4. Implement faculty submit/archive actions
+- [ ] E5. Implement faculty resource stats view (`GET /v1/faculty/resources/:id/stats`)
+
+### Phase F: Admin Web Surfaces
+
+- [ ] F1. Implement admin dashboard summary (`GET /v1/admin/dashboard/summary`)
+- [ ] F2. Implement admin users list/detail + role/status actions
+- [ ] F3. Implement admin resources overview + moderation status updates
+- [ ] F4. Implement admin downloads overview/audit
+- [ ] F5. Implement admin search reindex actions (bulk + single resource)
+- [ ] F6. Implement admin subjects create/update/delete screens
+
+### Phase G: Hardening and Release Readiness
+
+- [ ] G1. Add pagination consistency on list-heavy web pages
+- [ ] G2. Add robust loading/empty/error states across all implemented screens
+- [ ] G3. Add responsive pass for small, medium, and large breakpoints
+- [ ] G4. Add accessibility pass (labels, keyboard nav, focus states, contrast)
+- [ ] G5. Add smoke tests for auth, student browsing, search, download, faculty, and admin flows
+- [ ] G6. Replace all remaining starter/template artifacts in web app
+
+### Sign-off
+
+- [ ] Web Student MVP approved (Phases A-D)
+- [ ] Web Faculty surfaces approved (Phase E)
+- [ ] Web Admin surfaces approved (Phase F)
+- [ ] Web Release candidate approved (Phase G)
