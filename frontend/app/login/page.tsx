@@ -1,7 +1,42 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { type FormEvent, useState } from "react";
+
+import { signInWithPassword } from "@/src/lib/auth/web-auth-client";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!email.trim() || !password) {
+      setErrorMessage("Please enter both email and password.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrorMessage(null);
+
+    try {
+      const result = await signInWithPassword(email.trim(), password);
+      const rolePath = result.role === "admin" ? "/admin" : result.role === "faculty" ? "/faculty" : "/student";
+      router.push(rolePath);
+      router.refresh();
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Unable to sign in right now.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <main className="page-container py-6 sm:py-10">
       <section className="grid gap-5 rounded-[var(--radius-panel)] border border-[var(--border-soft)] bg-white p-4 shadow-[var(--shadow-soft)] sm:gap-7 sm:p-6 lg:grid-cols-[1.1fr_1fr] lg:p-8">
@@ -32,12 +67,14 @@ export default function LoginPage() {
             <p className="text-sm text-[var(--muted)]">Auth connection to Supabase and backend sync will be wired in the next phase.</p>
           </div>
 
-          <form className="mt-6 space-y-4" aria-label="Sign in form">
+          <form className="mt-6 space-y-4" aria-label="Sign in form" onSubmit={handleSubmit}>
             <label className="block space-y-1.5">
               <span className="text-sm font-medium">Email</span>
               <input
                 type="email"
                 placeholder="you@cmrit.ac.in"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
                 className="w-full rounded-[12px] border border-[var(--border-soft)] bg-[var(--surface)] px-3.5 py-3 text-sm outline-none transition focus:border-[var(--primary)]"
               />
             </label>
@@ -47,15 +84,22 @@ export default function LoginPage() {
               <input
                 type="password"
                 placeholder="Enter your password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
                 className="w-full rounded-[12px] border border-[var(--border-soft)] bg-[var(--surface)] px-3.5 py-3 text-sm outline-none transition focus:border-[var(--primary)]"
               />
             </label>
 
+            {errorMessage ? (
+              <p className="rounded-[12px] border border-[#f3c2c2] bg-[#fff1f1] px-3 py-2 text-sm text-[#8f2d2d]">{errorMessage}</p>
+            ) : null}
+
             <button
-              type="button"
+              type="submit"
+              disabled={isSubmitting}
               className="mt-2 inline-flex w-full items-center justify-center rounded-[var(--radius-pill)] bg-[var(--primary)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[var(--primary-strong)]"
             >
-              Continue
+              {isSubmitting ? "Signing in..." : "Continue"}
             </button>
           </form>
 

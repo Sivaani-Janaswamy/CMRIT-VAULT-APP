@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Poppins, Space_Grotesk } from "next/font/google";
 
+import { AuthBootstrap } from "@/src/components/auth/auth-bootstrap";
 import { SiteHeader } from "@/src/components/layout/site-header";
 
 import "./globals.css";
@@ -33,6 +34,7 @@ export default function RootLayout({
       className={`${bodyFont.variable} ${headingFont.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
+        <AuthBootstrap />
         <SiteHeader />
         {children}
       </body>

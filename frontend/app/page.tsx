@@ -1,7 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
 
-export default function Home() {
+import { getWebSession } from "@/src/lib/auth/session";
+
+export default async function Home() {
+  const session = await getWebSession();
+  const isAuthenticated = Boolean(session);
+
   return (
     <main className="page-container flex flex-1 flex-col gap-6 py-8 sm:gap-8 sm:py-10">
       <section className="glass-panel grid gap-6 overflow-hidden p-5 sm:p-8 lg:grid-cols-[1.25fr_1fr]">
@@ -17,20 +22,63 @@ export default function Home() {
               Access curated academic resources, publish materials, and manage moderation workflows in one place.
             </p>
           </div>
-          <div className="flex flex-wrap gap-3">
-            <Link
-              href="/login"
-              className="rounded-[var(--radius-pill)] bg-[var(--primary)] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--primary-strong)]"
-            >
-              Login
-            </Link>
-            <Link
-              href="/signup"
-              className="rounded-[var(--radius-pill)] border border-[var(--border-soft)] bg-white px-5 py-2.5 text-sm font-semibold transition hover:bg-[var(--surface-soft)]"
-            >
-              Create account
-            </Link>
-          </div>
+          {isAuthenticated ? (
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href="/subjects"
+                className="rounded-[var(--radius-pill)] bg-[var(--primary)] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--primary-strong)]"
+              >
+                Browse subjects
+              </Link>
+              <Link
+                href="/notes"
+                className="rounded-[var(--radius-pill)] border border-[var(--border-soft)] bg-white px-5 py-2.5 text-sm font-semibold transition hover:bg-[var(--surface-soft)]"
+              >
+                Open notes
+              </Link>
+              <Link
+                href="/pyqs"
+                className="rounded-[var(--radius-pill)] border border-[var(--border-soft)] bg-white px-5 py-2.5 text-sm font-semibold transition hover:bg-[var(--surface-soft)]"
+              >
+                Open PYQs
+              </Link>
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href="/login"
+                className="rounded-[var(--radius-pill)] bg-[var(--primary)] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--primary-strong)]"
+              >
+                Login
+              </Link>
+              <Link
+                href="/signup"
+                className="rounded-[var(--radius-pill)] border border-[var(--border-soft)] bg-white px-5 py-2.5 text-sm font-semibold transition hover:bg-[var(--surface-soft)]"
+              >
+                Create account
+              </Link>
+            </div>
+          )}
+
+          <form action="/search" className="space-y-2">
+            <div className="flex gap-2">
+              <input
+                type="search"
+                name="q"
+                placeholder="Search notes, PYQs, subjects..."
+                className="h-12 w-full rounded-[var(--radius-pill)] border border-[var(--border-soft)] bg-white px-4 text-sm outline-none transition focus:border-[var(--primary)]"
+              />
+              <button
+                type="submit"
+                className="rounded-[var(--radius-pill)] bg-[var(--primary)] px-5 text-sm font-semibold text-white transition hover:bg-[var(--primary-strong)]"
+              >
+                Search
+              </button>
+            </div>
+            {!isAuthenticated ? (
+              <p className="text-xs text-[var(--muted)]">Sign in to run full search and suggestions.</p>
+            ) : null}
+          </form>
         </div>
 
         <div className="relative min-h-60 overflow-hidden rounded-[var(--radius-panel)] border border-[var(--border-soft)] bg-white">

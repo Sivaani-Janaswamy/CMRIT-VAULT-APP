@@ -139,11 +139,12 @@ Faculty endpoint note: `/v1/faculty/*` may include faculty-owned archived resour
 | Screen | API Used | Implemented? | Notes |
 | --- | --- | --- | --- |
 | App shell | N/A | ✅ | CMRIT Vault landing shell, navigation, design tokens, and hero assets are implemented |
-| Login | N/A | ⚠️ | UI page is implemented; Supabase + backend sync wiring is pending |
-| Dashboard | N/A | ⚠️ | Route scaffolds exist for student/faculty/admin; data integration is pending |
-| Notes browsing | N/A | ⚠️ | Placeholder route exists; API-backed notes browsing is pending |
-| Search | N/A | ⚠️ | Placeholder route exists; API-backed search/suggestions are pending |
-| Admin panel | N/A | ⚠️ | Guarded admin route scaffold exists; analytics/workflow integration is pending |
+| Login | Supabase Auth + `/v1/auth/sync` | ✅ | Sign-in flow, backend sync, role redirect, and error handling are implemented |
+| Dashboard | `GET /v1/faculty/dashboard/summary`, `GET /v1/admin/dashboard/summary` | ⚠️ | Faculty and admin dashboard summaries are API-backed with period filters; student dashboard surface remains pending |
+| Notes browsing | `GET /v1/resources`, `GET /v1/resources/:id` | ⚠️ | Subject-scoped notes/PYQs list, in-list search, resource detail, download action, and preview are implemented; dedicated notes hub page is still pending |
+| Search | `GET /v1/search/resources`, `GET /v1/search/suggest` | ✅ | Homepage + search-page search bars, suggestions, results, and advanced filters (type/subject/semester/department/academic year) are implemented |
+| Downloads history | `GET /v1/downloads/me` | ✅ | Web downloads page is implemented with resource/subject title filtering and date-range filters |
+| Admin panel | `GET /v1/admin/dashboard/summary`, `GET /v1/admin/users`, `PATCH /v1/admin/users/:id/role`, `PATCH /v1/admin/users/:id/status`, `GET /v1/admin/resources/overview`, `PATCH /v1/admin/resources/:id/status`, `GET /v1/admin/downloads/overview`, `POST /v1/admin/search/reindex`, `POST /v1/admin/search/resources/:id/reindex`, `POST/PATCH/DELETE /v1/admin/subjects` | ✅ | Admin overview, users management, resources moderation, downloads overview, search reindex actions, and subjects CRUD are implemented |
 
 ### Frontend Structure Status
 
@@ -151,31 +152,29 @@ Faculty endpoint note: `/v1/faculty/*` may include faculty-owned archived resour
 | --- | --- | --- |
 | `frontend/` folder | ✅ | Folder exists with Next.js project scaffold |
 | Next.js setup | ✅ | App Router scaffold is initialized with custom shell and auth pages |
-| API integration layer | ⚠️ | Base env config and typed HTTP client exist; auth sync and feature services are pending |
+| API integration layer | ✅ | Typed feature services now cover auth, subjects, resources, downloads, search, faculty, and admin surfaces |
 
 ## 6. Feature Completeness Matrix
 
 | Feature | Backend | Mobile | Web | Status |
 | --- | --- | --- | --- | --- |
-| Auth bootstrap | ✅ | ✅ | ⚠️ | Web login/signup UI and route scaffolds are implemented; auth/session wiring is pending |
+| Auth bootstrap | ✅ | ✅ | ✅ | Web login/signup, session restore, logout flow, backend sync, and role-aware redirects are implemented |
 | Users profile | ✅ | ✅ | ❌ | Mobile profile edit/update is implemented; web profile flow remains missing |
-| Subjects browsing | ✅ | ✅ | ❌ | Mobile subject list + subject resource browsing are implemented |
-| Resources lifecycle | ✅ | ✅ | ❌ | Backend lifecycle is complete; mobile supports faculty create/update/submit/archive and admin moderation |
-| Downloads tracking | ✅ | ✅ | ❌ | Backend endpoints are implemented; mobile history and native open/download UX are implemented; web history remains pending |
-| Search | ✅ | ✅ | ❌ | Backend Algolia search is implemented; mobile search screen is implemented; web search remains missing |
-| Faculty dashboard | ✅ | ✅ | ❌ | ⚠️ Backend faculty endpoints are implemented; mobile dashboard/resources/stats are live, web faculty UI is pending |
-| Admin panel | ✅ | ✅ | ❌ | ⚠️ Backend admin analytics endpoints are implemented; mobile admin UI is live, web admin UI is pending |
+| Subjects browsing | ✅ | ✅ | ✅ | Web subjects list/detail is implemented, including subject-level search and subject-scoped notes/PYQs listing |
+| Resources lifecycle | ✅ | ✅ | ✅ | Web supports student/faculty lifecycle operations and admin moderation status updates |
+| Downloads tracking | ✅ | ✅ | ✅ | Web signed download action and downloads history page are implemented |
+| Search | ✅ | ✅ | ✅ | Web search input, suggestions, results with resource navigation, and advanced filters are implemented |
+| Faculty dashboard | ✅ | ✅ | ✅ | Web faculty summary, resources list, create/edit flow, submit/archive actions, and resource stats view are implemented |
+| Admin panel | ✅ | ✅ | ✅ | Web admin dashboard summary, users role/status actions, resources moderation, downloads overview, search reindex, and subjects CRUD screens are implemented |
 | App shell / navigation | ✅ | ✅ | ✅ | Web app shell, content-first nav, and auth action buttons are implemented |
 
 ## 7. Architectural Gaps
 
 | Area | Problem | Impact | Recommendation |
 | --- | --- | --- | --- |
-| Resources module | Backend resources lifecycle exists; mobile browsing is now implemented, but web resource browsing is still missing | Web users cannot browse content yet | Add web resource browsing and detail flows |
-| Downloads module | Backend downloads slice is implemented; mobile history screen exists, but web history UX is still missing | Users cannot access history from web yet | Add web downloads history screen and integration |
+| Resources module | Web now supports subject-scoped listing and resource detail/download/preview, but a dedicated notes hub with richer filters is still pending | Some browsing paths are still fragmented | Add a dedicated notes/PYQs feed page with filters and sorting |
 | Download UX | Mobile now opens signed URLs natively with clipboard fallback when device launch fails | Fallback/error messaging can still be improved | Keep native-first behavior and refine user-facing failure messaging |
-| Search client surfaces | Backend Algolia search exists; mobile search is implemented; web search is still missing | Discovery UX is still missing on web | Add web search screens, filters, and suggestion UI |
-| Admin module | Dedicated admin module exists for analytics and moderation; mobile admin client surfaces are implemented and web admin is pending | Admin operations are now user-facing on mobile, but web parity is missing | Implement web admin screens and workflows |
+| Search client surfaces | Backend Algolia search exists; web now has search bars, suggestions, result listing, and advanced filters | Discovery is substantially complete for student MVP; further refinements are ranking/UX tuning | Tune relevance and add optional result-grouping refinements |
 | Web backend integration | Base web API client and env config are implemented, but feature integration is incomplete | Web can start consuming APIs but auth/profile/services are not wired yet | Implement auth/session flow and feature-specific services next |
 | Mobile content browsing | Subjects/resources browsing, downloads history, and search are implemented | Core browsing and download consumption work, and discovery is now available on mobile | Focus next on web discovery surfaces |
 | API contract coverage | Auth/users/subjects/resources/downloads/faculty/search/admin backend endpoints are implemented | Mobile adoption now covers core student/faculty/admin user-facing flows; remaining parity gaps are primarily web and optional admin single-resource reindex UX | Prioritize web dashboard/admin/search surfaces next |
@@ -197,9 +196,7 @@ Faculty endpoint note: `/v1/faculty/*` may include faculty-owned archived resour
 | Schema drift | Backend DB access | High | Keep code aligned to `DATABASE_DESIGN.md` and review queries against the schema |
 | Partial frontend feature wiring | Web | Medium | Complete auth/session integration and replace placeholders with API-backed screens |
 | Download fallback UX gap | Mobile | Low | Improve fallback and error messages when automatic URL launch is unavailable |
-| Download history UX gap | Mobile/Web | Medium | Implement web downloads history and signed URL consumption flows |
-| Client search UX gap | Web | Medium | Add web search screens and connect them to the backend search APIs |
-| Incomplete admin controls on web | Web | Medium | Build web admin client screens over already available backend admin endpoints |
+| Client search UX tuning gap | Web | Low | Tune ranking behavior, optional grouping, and minor UX refinements |
 | Auth bootstrap regressions | Mobile | High | Preserve loading/error states and keep auth sync idempotent |
 
 ## 10. Roadmap
@@ -227,8 +224,8 @@ Faculty endpoint note: `/v1/faculty/*` may include faculty-owned archived resour
 | Item | Scope | Dependency |
 | --- | --- | --- |
 | Search | Algolia relevance tuning, indexing sync validation, and result ranking refinements | Search backend stability |
-| Faculty dashboard | Mobile faculty dashboard/resources lifecycle/stats UI is implemented; web faculty UI remains | Resources module |
-| Admin panel | Mobile analytics/moderation UI is implemented; web admin UI remains | Users/resources/downloads modules |
+| Faculty dashboard | Mobile + web faculty dashboard/resources lifecycle/stats UI is implemented | Resources module |
+| Admin panel | Mobile + web admin dashboard/users/moderation/download-overview/search-reindex/subjects-CRUD are implemented | Users/resources/downloads/search/subjects modules |
 
 ### Phase 4: Production Hardening
 
@@ -332,55 +329,75 @@ Rules:
 
 ### Phase B: Auth and Session
 
-- [ ] B1. Implement login page (Supabase auth + backend sync)
-- [ ] B2. Implement signup page (Supabase auth + backend sync)
-- [ ] B3. Implement session bootstrap/restore on refresh
-- [ ] B4. Implement logout and auth error recovery UX
+- [x] B1. Implement login page (Supabase auth + backend sync)
+- [x] B2. Implement signup page (Supabase auth + backend sync)
+- [x] B3. Implement session bootstrap/restore on refresh
+- [x] B4. Implement logout and auth error recovery UX
 
-Phase B note:
-- Login/signup UI layout and spacing are completed and approved.
-- Functional auth wiring remains pending for B1-B4 completion.
+Phase B completion note:
+- Login/signup UI and functional auth wiring are completed and user-approved.
+- Session restore, guarded route compatibility, and logout recovery flow are completed.
 
 ### Phase C: Student Core Flows
 
-- [ ] C1. Implement subjects list page (`GET /v1/subjects`)
-- [ ] C2. Implement subject detail page (`GET /v1/subjects/:id`)
-- [ ] C3. Implement resources list + filters for subject (`GET /v1/resources`)
-- [ ] C4. Implement resource detail page (`GET /v1/resources/:id`)
-- [ ] C5. Implement download action from resource detail (`POST /v1/resources/:id/download-url`)
-- [ ] C6. Implement downloads history page (`GET /v1/downloads/me`)
+- [x] C1. Implement subjects list page (`GET /v1/subjects`)
+- [x] C2. Implement subject detail page (`GET /v1/subjects/:id`)
+- [x] C3. Implement resources list + filters for subject (`GET /v1/resources`)
+- [x] C4. Implement resource detail page (`GET /v1/resources/:id`)
+- [x] C5. Implement download action from resource detail (`POST /v1/resources/:id/download-url`)
+- [x] C6. Implement downloads history page (`GET /v1/downloads/me`)
+
+Phase C progress note:
+- C1-C6 are implemented and user-approved, including subject-level list search, resource preview support where feasible, and web downloads history with title/date filters.
 
 ### Phase D: Search and Discovery
 
-- [ ] D1. Implement search input with autocomplete suggestions (`GET /v1/search/suggest`)
-- [ ] D2. Implement search results page (`GET /v1/search/resources`)
-- [ ] D3. Add search filters, empty states, and no-results UX
+- [x] D1. Implement search input with autocomplete suggestions (`GET /v1/search/suggest`)
+- [x] D2. Implement search results page (`GET /v1/search/resources`)
+- [x] D3. Add search filters, empty states, and no-results UX
+
+Phase D progress note:
+- D1-D3 are implemented and user-approved via homepage/search-page search bars, autocomplete, result listing, and advanced filters.
 
 ### Phase E: Faculty Web Surfaces
 
-- [ ] E1. Implement faculty dashboard summary (`GET /v1/faculty/dashboard/summary`)
-- [ ] E2. Implement faculty resources list (`GET /v1/faculty/resources`)
-- [ ] E3. Implement faculty create/edit form for resources
-- [ ] E4. Implement faculty submit/archive actions
-- [ ] E5. Implement faculty resource stats view (`GET /v1/faculty/resources/:id/stats`)
+- [x] E1. Implement faculty dashboard summary (`GET /v1/faculty/dashboard/summary`)
+- [x] E2. Implement faculty resources list (`GET /v1/faculty/resources`)
+- [x] E3. Implement faculty create/edit form for resources
+- [x] E4. Implement faculty submit/archive actions
+- [x] E5. Implement faculty resource stats view (`GET /v1/faculty/resources/:id/stats`)
+
+Phase E progress note:
+- E1-E5 are implemented with dashboard summary, faculty resources list, create/edit flow, submit/archive actions, and resource stats view.
 
 ### Phase F: Admin Web Surfaces
 
-- [ ] F1. Implement admin dashboard summary (`GET /v1/admin/dashboard/summary`)
-- [ ] F2. Implement admin users list/detail + role/status actions
-- [ ] F3. Implement admin resources overview + moderation status updates
-- [ ] F4. Implement admin downloads overview/audit
-- [ ] F5. Implement admin search reindex actions (bulk + single resource)
-- [ ] F6. Implement admin subjects create/update/delete screens
+- [x] F1. Implement admin dashboard summary (`GET /v1/admin/dashboard/summary`)
+- [x] F2. Implement admin users list/detail + role/status actions
+- [x] F3. Implement admin resources overview + moderation status updates
+- [x] F4. Implement admin downloads overview/audit
+- [x] F5. Implement admin search reindex actions (bulk + single resource)
+- [x] F6. Implement admin subjects create/update/delete screens
+
+Phase F progress note:
+- F1-F6 are implemented with admin dashboard summary, users role/status actions, resources moderation, downloads overview, search reindex actions, and subjects CRUD screens.
 
 ### Phase G: Hardening and Release Readiness
 
-- [ ] G1. Add pagination consistency on list-heavy web pages
-- [ ] G2. Add robust loading/empty/error states across all implemented screens
-- [ ] G3. Add responsive pass for small, medium, and large breakpoints
-- [ ] G4. Add accessibility pass (labels, keyboard nav, focus states, contrast)
-- [ ] G5. Add smoke tests for auth, student browsing, search, download, faculty, and admin flows
-- [ ] G6. Replace all remaining starter/template artifacts in web app
+- [x] G1. Add pagination consistency on list-heavy web pages
+- [x] G2. Add robust loading/empty/error states across all implemented screens
+- [x] G3. Add responsive pass for small, medium, and large breakpoints
+- [x] G4. Add accessibility pass (labels, keyboard nav, focus states, contrast)
+- [x] G5. Add smoke tests for auth, student browsing, search, download, faculty, and admin flows
+- [x] G6. Replace all remaining starter/template artifacts in web app
+
+Phase G progress note:
+- G1 is implemented with pagination controls across search results, downloads history, faculty resources, and admin list-heavy sections.
+- G2 is implemented with robust empty/error surfaces and route-level loading states for key pages (`search`, `downloads`, `subjects`, `faculty`, `admin`).
+- G3 is implemented with responsive refinements across filter/pagination controls in key list-heavy views.
+- G4 is implemented with form labeling and accessibility-oriented aria improvements on major interactive surfaces.
+- G5 is implemented with Playwright smoke test scaffolding (`playwright.config.ts`, `tests/smoke.spec.ts`) and `npm run test:smoke` script.
+- G6 is implemented by replacing starter/template README content with project-specific frontend documentation.
 
 ### Sign-off
 
