@@ -45,6 +45,13 @@ export const updateUserRoleSchema = z
 
 export const updateUserStatusSchema = z
   .object({
-    is_active: z.boolean()
+    is_active: z.boolean().optional(),
+    isActive: z.boolean().optional()
   })
-  .strict();
+  .strict()
+  .refine((value) => value.is_active !== undefined || value.isActive !== undefined, {
+    message: 'Either is_active or isActive must be provided'
+  })
+  .transform((value) => ({
+    is_active: value.is_active ?? value.isActive ?? false
+  }));

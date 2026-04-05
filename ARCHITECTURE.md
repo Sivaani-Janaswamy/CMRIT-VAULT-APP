@@ -19,7 +19,7 @@ CMRIT Vault is a scalable academic content platform for:
 | Search functionality | Fast discovery of content |
 | Download tracking | Track content consumption and usage |
 
-The platform is designed to start as a mobile-first system and later expand into web without changing the core backend contract.
+The platform is designed as a mobile-first system with a stable backend contract.
 
 ## 2. Canonical References
 
@@ -42,7 +42,7 @@ CMRIT Vault uses a Supabase-first architecture with a thin Node.js API layer.
 | Supabase Postgres | Source of truth for metadata and relationships |
 | Supabase Storage | Private file storage |
 | Algolia | Search index and autocomplete |
-| Next.js later | Reuse the same API and schema for web |
+| Future clients later | Reuse the same API and schema without changing backend contracts |
 
 ## 4. Core Design Principles
 
@@ -54,7 +54,7 @@ CMRIT Vault uses a Supabase-first architecture with a thin Node.js API layer.
 | Metadata in Postgres | Store relationships, access data, and lifecycle state in the database |
 | Search as a read model | Algolia is only for search, never authorization |
 | Modular by feature | Organize code by auth, users, subjects, resources, downloads, search, faculty, admin |
-| API first | Mobile and future web should consume the same contracts |
+| API first | Mobile clients should consume stable backend contracts |
 | Canonical schema first | The database schema drives backend and app contracts |
 
 ## 5. Canonical Data Model
@@ -241,9 +241,8 @@ any → archived
 | Feature | Scope |
 |---|---|
 | Analytics | Download trends, popular subjects, active content |
-| Admin panel | Backend admin analytics endpoints implemented; mobile admin surfaces implemented, web admin surfaces pending |
+| Admin panel | Backend admin analytics endpoints implemented; mobile admin surfaces implemented |
 | Audit logs | Security and operational tracing |
-| Web frontend | Next.js reusing the same API |
 
 ## 12. Security Model
 
@@ -321,14 +320,13 @@ Any new feature should reuse these contracts instead of introducing parallel con
 | Backend | Node.js API scaffold exists with auth, users, subjects, resources, downloads, search, faculty, and admin modules |
 | Mobile | Flutter app includes Supabase auth bootstrap and role-aware routing with student browsing, faculty dashboard/resources lifecycle/stats, and expanded admin surfaces (analytics/moderation, users list/detail role-status management, subject create/manage, downloads audit, and search reindex action) |
 | Schema reference | `DATABASE_DESIGN.md` is the canonical schema file |
-| Search | Algolia-backed read-model implemented; mobile search + suggestions UI is implemented, web search UI is still planned |
-| Faculty dashboard | Backend faculty endpoints implemented; mobile faculty dashboard/resources lifecycle/stats UI is implemented, web faculty UI still planned |
-| Admin analytics | Backend admin summary/resources overview/downloads overview endpoints implemented; mobile admin analytics + management UI is implemented, web admin UI still planned |
+| Search | Algolia-backed read-model implemented; mobile search + suggestions UI is implemented |
+| Faculty dashboard | Backend faculty endpoints implemented; mobile faculty dashboard/resources lifecycle/stats UI is implemented |
+| Admin analytics | Backend admin summary/resources overview/downloads overview endpoints implemented; mobile admin analytics + management UI is implemented |
 | Resources and downloads backend modules | Implemented; only client screens and refinements remain |
-| Web frontend | Next.js scaffold exists; production screens and backend integration remain |
 
 ## 18. Final Note
 
 This project should stay simple, modular, and production-oriented.
 
-Build only what is needed for the current phase, but keep the architecture strong enough to support thousands of users and future web expansion.
+Build only what is needed for the current phase, but keep the architecture strong enough to support thousands of users.

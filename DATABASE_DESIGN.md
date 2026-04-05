@@ -2,7 +2,7 @@
 
 This document is the canonical reference for the current Supabase database schema for CMRIT Vault.
 
-Use this file to verify schema assumptions in backend, mobile, and future web code before adding or changing queries.
+Use this file to verify schema assumptions in backend and mobile code before adding or changing queries.
 
 ## Schema Overview
 
@@ -169,7 +169,7 @@ Use this file to verify schema assumptions in backend, mobile, and future web co
 | `resource_id` | uuid | FK to `resources(id)` |
 | `user_id` | uuid | FK to `users(id)` |
 | `resource_title` | text | Snapshot title at download time |
-| `source` | text | Default `mobile`, one of `mobile`, `web`, `admin` |
+| `source` | text | Default `mobile`, one of `mobile`, `admin` |
 | `ip_hash` | text | Optional privacy-safe audit field |
 | `user_agent` | text | Optional audit field |
 | `downloaded_at` | timestamptz | Default `now()` |
@@ -433,7 +433,7 @@ All endpoints use the standard envelope:
 | Derive, do not duplicate | If the API needs a role string, map it from `roles.code`; do not add `users.role` |
 | Keep content centralized | New content types should extend `resources` unless there is a strong domain reason to split tables |
 | Keep storage private | All new files must remain behind signed URLs in the private bucket |
-| Maintain backward-compatible API shape | If a response field is already consumed by mobile/web, preserve it when possible |
+| Maintain backward-compatible API shape | If a response field is already consumed by mobile clients, preserve it when possible |
 | Add columns intentionally | Any new nullable column should have a documented use case and default behavior |
 
 ## Change Management Rules
