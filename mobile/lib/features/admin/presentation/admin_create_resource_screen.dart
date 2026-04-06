@@ -15,6 +15,6 @@ class AdminCreateResourceScreen extends ConsumerWidget {
       return const AdminAccessDeniedView();
     }
 
-    return const FacultyResourceFormScreen();
+    return const FacultyResourceFormScreen(enableCreateAnother: true);
   }
 }

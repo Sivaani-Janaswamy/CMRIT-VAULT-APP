@@ -39,20 +39,37 @@ class DownloadsScreen extends ConsumerWidget {
           ),
           data: (page) {
             if (page.items.isEmpty) {
-              return const AppEmptyStateCard(
-                icon: Icons.download_outlined,
-                title: 'No downloads yet',
-                message: 'Downloaded resources will appear here.',
+              return RefreshIndicator(
+                onRefresh: () async {
+                  ref.invalidate(downloadsHistoryProvider);
+                  await ref.read(downloadsHistoryProvider.future);
+                },
+                child: ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  children: const [
+                    AppEmptyStateCard(
+                      icon: Icons.download_outlined,
+                      title: 'No downloads yet',
+                      message: 'Downloaded resources will appear here.',
+                    ),
+                  ],
+                ),
               );
             }
 
-            return ListView.separated(
-              itemCount: page.items.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 8),
-              itemBuilder: (context, index) {
-                final entry = page.items[index];
-                return _DownloadCard(entry: entry);
+            return RefreshIndicator(
+              onRefresh: () async {
+                ref.invalidate(downloadsHistoryProvider);
+                await ref.read(downloadsHistoryProvider.future);
               },
+              child: ListView.separated(
+                itemCount: page.items.length,
+                separatorBuilder: (context, index) => const SizedBox(height: 8),
+                itemBuilder: (context, index) {
+                  final entry = page.items[index];
+                  return _DownloadCard(entry: entry);
+                },
+              ),
             );
           },
         ),

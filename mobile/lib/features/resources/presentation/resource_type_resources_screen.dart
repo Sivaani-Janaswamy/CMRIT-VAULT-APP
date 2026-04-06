@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/ui_state_widgets.dart';
 import '../../subjects/application/subjects_controller.dart';
 import '../../subjects/domain/resource_item.dart';
 import 'widgets/resource_card_widget.dart';
 
-class ResourceTypeResourcesScreen extends ConsumerWidget {
+class ResourceTypeResourcesScreen extends ConsumerStatefulWidget {
   const ResourceTypeResourcesScreen({
     super.key,
     required this.resourceType,
@@ -16,8 +17,24 @@ class ResourceTypeResourcesScreen extends ConsumerWidget {
   final String resourceType;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final resourcesAsync = ref.watch(resourcesByTypeProvider(resourceType));
+  ConsumerState<ResourceTypeResourcesScreen> createState() =>
+      _ResourceTypeResourcesScreenState();
+}
+
+class _ResourceTypeResourcesScreenState
+    extends ConsumerState<ResourceTypeResourcesScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final resourcesAsync = ref.watch(resourcesByTypeProvider(widget.resourceType));
     final subjectsAsync = ref.watch(subjectsListProvider);
     final Map<String, String> subjectNameById = {
       for (final subject in subjectsAsync.valueOrNull?.items ?? const [])
@@ -36,7 +53,7 @@ class ResourceTypeResourcesScreen extends ConsumerWidget {
             }
           },
         ),
-        title: Text(_screenTitle(resourceType)),
+        title: Text(_screenTitle(widget.resourceType)),
       ),
       body: SafeArea(
         child: resourcesAsync.when(
@@ -45,7 +62,7 @@ class ResourceTypeResourcesScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _TypeBannerCard(resourceType: resourceType),
+                _TypeBannerCard(resourceType: widget.resourceType),
                 const SizedBox(height: 12),
                 const AppLoadingStateCard(label: 'Loading resources...'),
               ],
@@ -56,7 +73,7 @@ class ResourceTypeResourcesScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _TypeBannerCard(resourceType: resourceType),
+                _TypeBannerCard(resourceType: widget.resourceType),
                 const SizedBox(height: 12),
                 const AppEmptyStateCard(
                   icon: Icons.error_outline,
@@ -67,20 +84,62 @@ class ResourceTypeResourcesScreen extends ConsumerWidget {
             ),
           ),
           data: (page) {
+            final query = _searchQuery.trim().toLowerCase();
+            final filteredResources = query.isEmpty
+                ? page.items
+                : page.items
+                    .where(
+                      (item) =>
+                          item.title.toLowerCase().contains(query) ||
+                          item.fileName.toLowerCase().contains(query),
+                    )
+                    .toList(growable: false);
+
             return Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _TypeBannerCard(resourceType: resourceType),
+                  _TypeBannerCard(resourceType: widget.resourceType),
                   const SizedBox(height: 12),
+                  TextField(
+                    controller: _searchController,
+                    onChanged: (value) {
+                      setState(() {
+                        _searchQuery = value;
+                      });
+                    },
+                    textInputAction: TextInputAction.search,
+                    decoration: InputDecoration(
+                      hintText: 'Search by title or file name',
+                      hintStyle: const TextStyle(color: AppColors.text),
+                      filled: true,
+                      fillColor: Colors.white,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 14,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide.none,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide.none,
+                      ),
+                      prefixIcon: const Icon(Icons.search, color: AppColors.text),
+                      suffixIcon: const Icon(Icons.tune, color: AppColors.text),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
                   Row(
                     children: [
                       Expanded(
                         child: AppSectionHeader(
-                          title: _screenTitle(resourceType),
+                          title: _screenTitle(widget.resourceType),
                         ),
                       ),
+                      const SizedBox(width: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 10,
@@ -91,19 +150,25 @@ class ResourceTypeResourcesScreen extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(999),
                         ),
                         child: Text(
-                          'Count: ${page.items.length}',
+                          'Count: ${filteredResources.length}',
                           style: const TextStyle(fontSize: 12),
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 10),
-                  if (page.items.isEmpty)
-                    const Expanded(
+                  if (filteredResources.isEmpty)
+                    Expanded(
                       child: AppEmptyStateCard(
-                        icon: Icons.folder_open_outlined,
-                        title: 'No resources found',
-                        message: 'Try searching or explore subjects.',
+                        icon: query.isEmpty
+                            ? Icons.folder_open_outlined
+                            : Icons.search_off,
+                        title: query.isEmpty
+                            ? 'No resources found'
+                            : 'No matching resources',
+                        message: query.isEmpty
+                            ? 'Try searching or explore subjects.'
+                            : 'Try a different title or file name.',
                       ),
                     )
                   else
@@ -113,7 +178,7 @@ class ResourceTypeResourcesScreen extends ConsumerWidget {
                           final width = constraints.maxWidth;
                           final crossAxisCount = width < 380 ? 1 : 2;
                           return GridView.builder(
-                            itemCount: page.items.length,
+                            itemCount: filteredResources.length,
                             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: crossAxisCount,
                               crossAxisSpacing: 12,
@@ -123,10 +188,17 @@ class ResourceTypeResourcesScreen extends ConsumerWidget {
                               childAspectRatio: width < 380 ? 1.85 : 0.82,
                             ),
                             itemBuilder: (context, index) {
-                              final resource = page.items[index];
+                              final resource = filteredResources[index];
                               return ResourceCardWidget(
                                 data: _toCardData(resource, subjectNameById),
-                                onTap: () => context.push('/resources/${resource.id}'),
+                                onTap: () => context.push(
+                                  '/resources/${resource.id}/preview',
+                                  extra: {
+                                    'title': resource.title,
+                                    'mimeType': resource.mimeType,
+                                    'fileName': resource.fileName,
+                                  },
+                                ),
                               );
                             },
                           );
@@ -163,7 +235,7 @@ class ResourceTypeResourcesScreen extends ConsumerWidget {
       case 'question_paper':
         return 'PYQs';
       case 'faculty_upload':
-        return 'Faculty Uploads';
+        return 'Other materials';
       default:
         return 'Resources';
     }
@@ -221,7 +293,7 @@ class _TypeBannerCard extends StatelessWidget {
       case 'question_paper':
         return 'PYQ Collection';
       case 'faculty_upload':
-        return 'Faculty Uploads';
+        return 'Other materials';
       default:
         return 'Resources';
     }
@@ -234,7 +306,7 @@ class _TypeBannerCard extends StatelessWidget {
       case 'question_paper':
         return 'Browse previous year question papers.';
       case 'faculty_upload':
-        return 'Browse content shared by faculty members.';
+        return 'Browse additional study materials shared by faculty.';
       default:
         return 'Browse resources by selected type.';
     }

@@ -16,11 +16,13 @@ import '../../features/admin/presentation/admin_create_resource_screen.dart';
 import '../../features/admin/presentation/admin_create_subject_screen.dart';
 import '../../features/admin/presentation/admin_download_audit_screen.dart';
 import '../../features/admin/presentation/admin_downloads_overview_screen.dart';
+import '../../features/admin/presentation/admin_manage_resource_screen.dart';
 import '../../features/admin/presentation/admin_resources_overview_screen.dart';
 import '../../features/admin/presentation/admin_search_reindex_screen.dart';
 import '../../features/admin/presentation/admin_user_detail_screen.dart';
 import '../../features/admin/presentation/admin_subject_edit_screen.dart';
 import '../../features/admin/presentation/admin_users_screen.dart';
+import '../../features/admin/domain/admin_resource_overview_item.dart';
 import '../../features/faculty/presentation/faculty_access_denied_view.dart';
 import '../../features/faculty/presentation/faculty_dashboard_screen.dart';
 import '../../features/faculty/presentation/faculty_create_resource_screen.dart';
@@ -31,6 +33,7 @@ import '../../features/search/presentation/search_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/downloads/presentation/downloads_screen.dart';
 import '../../features/resources/presentation/recently_viewed_screen.dart';
+import '../../features/resources/presentation/resource_preview_screen.dart';
 import '../../features/resources/presentation/resource_type_resources_screen.dart';
 import '../../features/subjects/domain/subject.dart';
 import '../../features/subjects/domain/resource_item.dart';
@@ -117,6 +120,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
+        path: '/resources/:resourceId/preview',
+        builder: (context, state) {
+          final resourceId = state.pathParameters['resourceId'] ?? '';
+          final extra = state.extra;
+          final data = extra is Map<String, dynamic> ? extra : const <String, dynamic>{};
+          return ResourcePreviewScreen(
+            resourceId: resourceId,
+            title: data['title'] as String?,
+            mimeType: data['mimeType'] as String?,
+            fileName: data['fileName'] as String?,
+          );
+        },
+      ),
+      GoRoute(
         path: '/downloads',
         builder: (context, state) => const DownloadsScreen(),
       ),
@@ -169,6 +186,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           final isAdmin = authState.user?.role == 'admin';
           return isAdmin
               ? const AdminCreateResourceScreen()
+              : const AdminAccessDeniedView();
+        },
+      ),
+      GoRoute(
+        path: '/admin/resources/:resourceId/manage',
+        builder: (context, state) {
+          final isAdmin = authState.user?.role == 'admin';
+          final resourceId = state.pathParameters['resourceId'] ?? '';
+          final item = state.extra is AdminResourceOverviewItem
+              ? state.extra as AdminResourceOverviewItem
+              : null;
+          return isAdmin
+              ? AdminManageResourceScreen(
+                  resourceId: resourceId,
+                  initialItem: item,
+                )
               : const AdminAccessDeniedView();
         },
       ),

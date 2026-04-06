@@ -118,7 +118,14 @@ class SubjectDetailScreen extends ConsumerWidget {
                               downloadCount: resource.downloadCount,
                               fileHint: resource.mimeType,
                             ),
-                            onTap: () => context.push('/resources/${resource.id}'),
+                            onTap: () => context.push(
+                              '/resources/${resource.id}/preview',
+                              extra: {
+                                'title': resource.title,
+                                'mimeType': resource.mimeType,
+                                'fileName': resource.fileName,
+                              },
+                            ),
                           );
                         },
                       );

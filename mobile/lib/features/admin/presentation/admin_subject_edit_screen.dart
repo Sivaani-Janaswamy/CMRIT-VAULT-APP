@@ -23,6 +23,7 @@ class _AdminSubjectEditScreenState extends ConsumerState<AdminSubjectEditScreen>
   int _semester = 1;
   bool _isActive = true;
   String? _selectedSubjectId;
+  String? _lastSyncedSignature;
 
   int _normalizeSemester(int value) {
     if (value < 1 || value > 8) {
@@ -46,6 +47,11 @@ class _AdminSubjectEditScreenState extends ConsumerState<AdminSubjectEditScreen>
     _departmentController.text = subject.department;
     _semester = _normalizeSemester(subject.semester);
     _isActive = subject.isActive;
+    _lastSyncedSignature = _subjectSignature(subject);
+  }
+
+  String _subjectSignature(Subject subject) {
+    return '${subject.id}|${subject.code}|${subject.name}|${subject.department}|${subject.semester}|${subject.isActive}|${subject.updatedAt?.toIso8601String() ?? ''}';
   }
 
   @override
@@ -120,6 +126,19 @@ class _AdminSubjectEditScreenState extends ConsumerState<AdminSubjectEditScreen>
 
             final actionState = ref.watch(adminSubjectManagementControllerProvider);
             final isLoading = actionState.isLoading;
+            final selectedSignature = _subjectSignature(selected);
+            if (_selectedSubjectId != null &&
+                _lastSyncedSignature != selectedSignature &&
+                !isLoading) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (!mounted) {
+                  return;
+                }
+                setState(() {
+                  _applySubject(selected);
+                });
+              });
+            }
 
             return SingleChildScrollView(
               child: Form(
@@ -136,6 +155,7 @@ class _AdminSubjectEditScreenState extends ConsumerState<AdminSubjectEditScreen>
                         child: Column(
                           children: [
                     DropdownButtonFormField<String>(
+                      key: ValueKey(selected.id),
                       initialValue: selected.id,
                       isExpanded: true,
                       decoration: const InputDecoration(
@@ -210,6 +230,7 @@ class _AdminSubjectEditScreenState extends ConsumerState<AdminSubjectEditScreen>
                     ),
                     const SizedBox(height: 10),
                     DropdownButtonFormField<int>(
+                      key: ValueKey(_semester),
                       initialValue: _semester,
                       decoration: const InputDecoration(
                         labelText: 'Semester',

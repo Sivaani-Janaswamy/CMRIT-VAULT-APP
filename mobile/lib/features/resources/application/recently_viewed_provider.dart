@@ -6,22 +6,44 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../subjects/domain/resource_item.dart';
 import '../presentation/widgets/resource_card_widget.dart';
 
+final recentlyViewedScopeProvider = StateProvider<String?>((ref) => null);
+
 final recentlyViewedProvider =
     StateNotifierProvider<RecentlyViewedNotifier, List<ResourceCardData>>(
-  (ref) => RecentlyViewedNotifier(),
+  (ref) => RecentlyViewedNotifier(
+    userId: ref.watch(recentlyViewedScopeProvider),
+  ),
 );
 
 class RecentlyViewedNotifier extends StateNotifier<List<ResourceCardData>> {
-  RecentlyViewedNotifier() : super(const []) {
+  RecentlyViewedNotifier({required String? userId})
+      : _userId = userId,
+        super(const []) {
     _loadPersisted();
   }
 
   static const int _maxItems = 10;
-  static const String _storageKey = 'recently_viewed';
+  static const String _legacyStorageKey = 'recently_viewed';
+
+  final String? _userId;
 
   final Future<SharedPreferences> _prefsFuture = SharedPreferences.getInstance();
 
+  String _storageKeyForUser(String userId) => 'recently_viewed_$userId';
+
+  String? get _activeStorageKey {
+    final userId = _userId?.trim();
+    if (userId == null || userId.isEmpty) {
+      return null;
+    }
+    return _storageKeyForUser(userId);
+  }
+
   void trackFromResource(ResourceItem resource) {
+    if (_activeStorageKey == null) {
+      return;
+    }
+
     final item = ResourceCardData(
       resourceId: resource.id,
       title: resource.title,
@@ -46,16 +68,35 @@ class RecentlyViewedNotifier extends StateNotifier<List<ResourceCardData>> {
   }
 
   Future<void> _loadPersisted() async {
+    final activeStorageKey = _activeStorageKey;
+    if (activeStorageKey == null) {
+      state = const [];
+      return;
+    }
+
     try {
       final prefs = await _prefsFuture;
-      final raw = prefs.getString(_storageKey);
+      String? raw = prefs.getString(activeStorageKey);
+
+      // One-time migration from legacy global key into user-scoped key.
+      if ((raw == null || raw.isEmpty) && prefs.containsKey(_legacyStorageKey)) {
+        final legacyRaw = prefs.getString(_legacyStorageKey);
+        if (legacyRaw != null && legacyRaw.isNotEmpty) {
+          await prefs.setString(activeStorageKey, legacyRaw);
+          await prefs.remove(_legacyStorageKey);
+          raw = legacyRaw;
+        } else {
+          await prefs.remove(_legacyStorageKey);
+        }
+      }
+
       if (raw == null || raw.isEmpty) {
         return;
       }
 
       final decoded = jsonDecode(raw);
       if (decoded is! List) {
-        await prefs.remove(_storageKey);
+        await prefs.remove(activeStorageKey);
         return;
       }
 
@@ -101,7 +142,7 @@ class RecentlyViewedNotifier extends StateNotifier<List<ResourceCardData>> {
     } catch (_) {
       try {
         final prefs = await _prefsFuture;
-        await prefs.remove(_storageKey);
+        await prefs.remove(activeStorageKey);
       } catch (_) {
         // Ignore persistence cleanup failures.
       }
@@ -109,6 +150,11 @@ class RecentlyViewedNotifier extends StateNotifier<List<ResourceCardData>> {
   }
 
   Future<void> _persist() async {
+    final activeStorageKey = _activeStorageKey;
+    if (activeStorageKey == null) {
+      return;
+    }
+
     try {
       final prefs = await _prefsFuture;
       final payload = state
@@ -124,7 +170,7 @@ class RecentlyViewedNotifier extends StateNotifier<List<ResourceCardData>> {
             },
           )
           .toList(growable: false);
-      await prefs.setString(_storageKey, jsonEncode(payload));
+      await prefs.setString(activeStorageKey, jsonEncode(payload));
     } catch (_) {
       // Ignore persistence failures to keep UI flow non-blocking.
     }
@@ -133,7 +179,13 @@ class RecentlyViewedNotifier extends StateNotifier<List<ResourceCardData>> {
   Future<void> _clearPersisted() async {
     try {
       final prefs = await _prefsFuture;
-      await prefs.remove(_storageKey);
+      final activeStorageKey = _activeStorageKey;
+      if (activeStorageKey != null) {
+        await prefs.remove(activeStorageKey);
+      }
+      if (prefs.containsKey(_legacyStorageKey)) {
+        await prefs.remove(_legacyStorageKey);
+      }
     } catch (_) {
       // Ignore persistence failures to keep UI flow non-blocking.
     }

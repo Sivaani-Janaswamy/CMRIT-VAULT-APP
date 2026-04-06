@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
 import '../../../core/services/backend_api_service.dart';
 import '../../../core/services/supabase_service.dart';
 import '../../../core/utils/app_logger.dart';
+import '../../resources/application/recently_viewed_provider.dart';
 import '../data/auth_repository.dart';
 import '../domain/auth_state.dart';
 
@@ -112,6 +113,8 @@ class AuthController extends Notifier<AuthState> {
 
   Future<void> signOut() async {
     appLog('AuthController.signOut(): start');
+    ref.read(recentlyViewedScopeProvider.notifier).state = null;
+    ref.read(recentlyViewedProvider.notifier).clear();
     await ref.read(supabaseClientProvider).auth.signOut();
     state = AuthState.unauthenticated();
     appLog('AuthController.signOut(): completed');
@@ -125,6 +128,7 @@ class AuthController extends Notifier<AuthState> {
   Future<void> _handleSession(supabase.Session? session) async {
     appLog('AuthController._handleSession(): start session=${session != null}');
     if (session == null) {
+      ref.read(recentlyViewedScopeProvider.notifier).state = null;
       state = AuthState.unauthenticated();
       appLog('AuthController._handleSession(): no session -> unauthenticated');
       return;
@@ -137,6 +141,7 @@ class AuthController extends Notifier<AuthState> {
       await api.syncAuth();
       appLog('AuthController._handleSession(): calling /v1/users/me');
       final user = await ref.read(authRepositoryProvider).fetchCurrentUser();
+      ref.read(recentlyViewedScopeProvider.notifier).state = user.id;
 
       state = AuthState.authenticated(
         session: session,

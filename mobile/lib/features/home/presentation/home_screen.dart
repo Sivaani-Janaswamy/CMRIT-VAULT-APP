@@ -143,7 +143,7 @@ class HomeScreen extends ConsumerWidget {
                       onTap: () => context.push('/resources/type/question_paper'),
                     ),
                     CategoryGridItem(
-                      title: 'Faculty Uploads',
+                      title: 'Other materials',
                       subtitle: 'Faculty shared resources',
                       icon: Icons.school_outlined,
                       onTap: () => context.push('/resources/type/faculty_upload'),

@@ -38,7 +38,7 @@ class AdminModerationActions extends StatelessWidget {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Confirm moderation'),
+          title: const Text('Are you sure?'),
           content: Text('Update status of "$resourceTitle" to $status?'),
           actions: [
             TextButton(

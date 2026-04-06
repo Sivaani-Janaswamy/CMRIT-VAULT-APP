@@ -17,15 +17,43 @@ class AdminUsersScreen extends ConsumerStatefulWidget {
 }
 
 class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
+  final TextEditingController _searchController = TextEditingController();
   final TextEditingController _departmentController = TextEditingController();
+  String _searchQuery = '';
   int _page = 1;
   String? _role;
   int? _semester;
 
   @override
   void dispose() {
+    _searchController.dispose();
     _departmentController.dispose();
     super.dispose();
+  }
+
+  InputDecoration _adminFieldDecoration({
+    required String labelText,
+    String? hintText,
+    IconData? prefixIcon,
+    IconData? suffixIcon,
+  }) {
+    return InputDecoration(
+      labelText: labelText,
+      hintText: hintText,
+      filled: true,
+      fillColor: Colors.white,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide.none,
+      ),
+      prefixIcon: prefixIcon == null ? null : Icon(prefixIcon),
+      suffixIcon: suffixIcon == null ? null : Icon(suffixIcon),
+    );
   }
 
   AdminUsersFilters get _filters => AdminUsersFilters(
@@ -57,7 +85,7 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            _buildFilters(),
+            _buildTopBar(),
             const SizedBox(height: 12),
             Expanded(
               child: usersAsync.when(
@@ -82,7 +110,16 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
                   ),
                 ),
                 data: (page) {
-                  if (page.items.isEmpty) {
+                  final query = _searchQuery.trim().toLowerCase();
+                  final filteredItems = query.isEmpty
+                      ? page.items
+                      : page.items
+                          .where(
+                            (item) => item.email.toLowerCase().contains(query),
+                          )
+                          .toList(growable: false);
+
+                  if (filteredItems.isEmpty) {
                     return const AppEmptyStateCard(
                       icon: Icons.group_outlined,
                       title: 'No users found',
@@ -94,16 +131,16 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
                     children: [
                       Expanded(
                         child: ListView.separated(
-                          itemCount: page.items.length,
+                          itemCount: filteredItems.length,
                           separatorBuilder: (context, index) =>
                               const SizedBox(height: 8),
                           itemBuilder: (context, index) {
-                            final item = page.items[index];
+                            final item = filteredItems[index];
                             return _AdminUserCard(
                               item: item,
-                              onUpdateRole: (role) => _updateRole(item, role),
+                              onUpdateRole: (role) => _confirmUpdateRole(item, role),
                               onToggleStatus: (value) =>
-                                  _updateStatus(item, value),
+                                  _confirmToggleStatus(item, value),
                             );
                           },
                         ),
@@ -151,6 +188,59 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
     );
   }
 
+  Widget _buildTopBar() {
+    return Row(
+      children: [
+        Expanded(
+          child: TextField(
+            controller: _searchController,
+            onChanged: (value) {
+              setState(() {
+                _searchQuery = value;
+                _page = 1;
+              });
+            },
+            textInputAction: TextInputAction.search,
+            decoration: _adminFieldDecoration(
+              labelText: 'Search email',
+              hintText: 'Search by email',
+              prefixIcon: Icons.search,
+              suffixIcon: Icons.tune,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        FilledButton.icon(
+          onPressed: _openFiltersSheet,
+          icon: const Icon(Icons.filter_alt_outlined),
+          label: const Text('Filters'),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _openFiltersSheet() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: 16,
+              right: 16,
+              top: 12,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 12,
+            ),
+            child: SingleChildScrollView(
+              child: _buildFilters(),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildFilters() {
     return Card(
       child: Padding(
@@ -159,9 +249,9 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
           children: [
             DropdownButtonFormField<String?>(
               initialValue: _role,
-              decoration: const InputDecoration(
+              decoration: _adminFieldDecoration(
                 labelText: 'Role',
-                border: OutlineInputBorder(),
+                prefixIcon: Icons.manage_accounts,
               ),
               items: const [
                 DropdownMenuItem<String?>(value: null, child: Text('All')),
@@ -178,17 +268,17 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
             const SizedBox(height: 8),
             TextField(
               controller: _departmentController,
-              decoration: const InputDecoration(
+              decoration: _adminFieldDecoration(
                 labelText: 'Department (optional)',
-                border: OutlineInputBorder(),
+                prefixIcon: Icons.apartment,
               ),
             ),
             const SizedBox(height: 8),
             DropdownButtonFormField<int?>(
               initialValue: _semester,
-              decoration: const InputDecoration(
+              decoration: _adminFieldDecoration(
                 labelText: 'Semester',
-                border: OutlineInputBorder(),
+                prefixIcon: Icons.school_outlined,
               ),
               items: [
                 const DropdownMenuItem<int?>(value: null, child: Text('All')),
@@ -215,6 +305,7 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
                       setState(() {
                         _page = 1;
                       });
+                      Navigator.of(context).pop();
                     },
                     child: const Text('Apply Filters'),
                   ),
@@ -229,6 +320,7 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
                         _semester = null;
                         _page = 1;
                       });
+                      Navigator.of(context).pop();
                     },
                     child: const Text('Clear'),
                   ),
@@ -265,6 +357,33 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
     ref.invalidate(adminUsersProvider(_filters));
   }
 
+  Future<void> _confirmUpdateRole(AdminUserItem item, String role) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Are you sure?'),
+          content: Text('Update role for ${item.email} to $role?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Confirm'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) {
+      return;
+    }
+    await _updateRole(item, role);
+  }
+
   Future<void> _updateStatus(AdminUserItem item, bool isActive) async {
     await ref
         .read(adminUserManagementControllerProvider.notifier)
@@ -293,6 +412,37 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
       ),
     );
     ref.invalidate(adminUsersProvider(_filters));
+  }
+
+  Future<void> _confirmToggleStatus(AdminUserItem item, bool isActive) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Are you sure?'),
+          content: Text(
+            isActive
+                ? 'Enable this user?'
+                : 'Disable this user?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Confirm'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) {
+      return;
+    }
+    await _updateStatus(item, isActive);
   }
 }
 
@@ -341,9 +491,22 @@ class _AdminUserCard extends StatelessWidget {
                 Expanded(
                   child: DropdownButtonFormField<String>(
                     initialValue: item.role,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Update Role',
-                      border: OutlineInputBorder(),
+                      filled: true,
+                      fillColor: Colors.white,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 14,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide.none,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide.none,
+                      ),
                     ),
                     items: const [
                       DropdownMenuItem(value: 'student', child: Text('student')),

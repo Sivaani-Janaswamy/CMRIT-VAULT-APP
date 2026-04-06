@@ -7,11 +7,25 @@ import '../../../core/widgets/ui_state_widgets.dart';
 import '../application/subjects_controller.dart';
 import '../domain/subject.dart';
 
-class SubjectListScreen extends ConsumerWidget {
+class SubjectListScreen extends ConsumerStatefulWidget {
   const SubjectListScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SubjectListScreen> createState() => _SubjectListScreenState();
+}
+
+class _SubjectListScreenState extends ConsumerState<SubjectListScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final subjectsAsync = ref.watch(subjectsListProvider);
 
     return Scaffold(
@@ -46,19 +60,73 @@ class SubjectListScreen extends ConsumerWidget {
               );
             }
 
-            return ListView.separated(
-              itemCount: page.items.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 8),
-              itemBuilder: (context, index) {
-                final subject = page.items[index];
-                return _SubjectCard(
-                  subject: subject,
-                  onTap: () => context.push(
-                    '/subjects/${subject.id}',
-                    extra: subject,
+            final query = _searchQuery.trim().toLowerCase();
+            final filteredSubjects = query.isEmpty
+                ? page.items
+                : page.items
+                    .where(
+                      (subject) =>
+                          subject.name.toLowerCase().contains(query) ||
+                          subject.code.toLowerCase().contains(query),
+                    )
+                    .toList(growable: false);
+
+            return Column(
+              children: [
+                TextField(
+                  controller: _searchController,
+                  onChanged: (value) {
+                    setState(() {
+                      _searchQuery = value;
+                    });
+                  },
+                  textInputAction: TextInputAction.search,
+                  decoration: InputDecoration(
+                    hintText: 'Search by subject name or code',
+                    hintStyle: const TextStyle(color: AppColors.text),
+                    filled: true,
+                    fillColor: Colors.white,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 14,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide.none,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide.none,
+                    ),
+                    prefixIcon: const Icon(Icons.search, color: AppColors.text),
+                    suffixIcon: const Icon(Icons.tune, color: AppColors.text),
                   ),
-                );
-              },
+                ),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: filteredSubjects.isEmpty
+                      ? const AppEmptyStateCard(
+                          icon: Icons.search_off,
+                          title: 'No matching subjects',
+                          message: 'Try a different name or code.',
+                        )
+                      : ListView.separated(
+                          itemCount: filteredSubjects.length,
+                          separatorBuilder: (context, index) =>
+                              const SizedBox(height: 8),
+                          itemBuilder: (context, index) {
+                            final subject = filteredSubjects[index];
+                            return _SubjectCard(
+                              subject: subject,
+                              onTap: () => context.push(
+                                '/subjects/${subject.id}',
+                                extra: subject,
+                              ),
+                            );
+                          },
+                        ),
+                ),
+              ],
             );
           },
         ),

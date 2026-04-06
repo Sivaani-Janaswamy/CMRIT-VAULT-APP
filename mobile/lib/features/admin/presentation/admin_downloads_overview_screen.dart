@@ -18,16 +18,44 @@ class AdminDownloadsOverviewScreen extends ConsumerStatefulWidget {
 
 class _AdminDownloadsOverviewScreenState
     extends ConsumerState<AdminDownloadsOverviewScreen> {
+  final TextEditingController _searchController = TextEditingController();
   final TextEditingController _userIdController = TextEditingController();
   final TextEditingController _resourceIdController = TextEditingController();
+  String _searchQuery = '';
   int _page = 1;
   String? _source;
 
   @override
   void dispose() {
+    _searchController.dispose();
     _userIdController.dispose();
     _resourceIdController.dispose();
     super.dispose();
+  }
+
+  InputDecoration _adminFieldDecoration({
+    required String labelText,
+    String? hintText,
+    IconData? prefixIcon,
+    IconData? suffixIcon,
+  }) {
+    return InputDecoration(
+      labelText: labelText,
+      hintText: hintText,
+      filled: true,
+      fillColor: Colors.white,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide.none,
+      ),
+      prefixIcon: prefixIcon == null ? null : Icon(prefixIcon),
+      suffixIcon: suffixIcon == null ? null : Icon(suffixIcon),
+    );
   }
 
   AdminDownloadsOverviewFilters get _filters {
@@ -62,7 +90,7 @@ class _AdminDownloadsOverviewScreenState
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            _buildFilters(),
+            _buildTopBar(),
             const SizedBox(height: 12),
             Expanded(
               child: overviewAsync.when(
@@ -76,7 +104,17 @@ class _AdminDownloadsOverviewScreenState
                   },
                 ),
                 data: (page) {
-                  if (page.items.isEmpty) {
+                  final query = _searchQuery.trim().toLowerCase();
+                  final filteredItems = query.isEmpty
+                      ? page.items
+                      : page.items
+                          .where(
+                            (item) =>
+                                item.resourceTitle.toLowerCase().contains(query),
+                          )
+                          .toList(growable: false);
+
+                  if (filteredItems.isEmpty) {
                     return _EmptyState(
                       onRetry: () {
                         ref.invalidate(adminDownloadsOverviewProvider(filters));
@@ -88,11 +126,11 @@ class _AdminDownloadsOverviewScreenState
                     children: [
                       Expanded(
                         child: ListView.separated(
-                          itemCount: page.items.length,
+                          itemCount: filteredItems.length,
                           separatorBuilder: (context, index) =>
                               const SizedBox(height: 8),
                           itemBuilder: (context, index) {
-                            return _DownloadOverviewCard(item: page.items[index]);
+                            return _DownloadOverviewCard(item: filteredItems[index]);
                           },
                         ),
                       ),
@@ -129,6 +167,59 @@ class _AdminDownloadsOverviewScreenState
     );
   }
 
+  Widget _buildTopBar() {
+    return Row(
+      children: [
+        Expanded(
+          child: TextField(
+            controller: _searchController,
+            onChanged: (value) {
+              setState(() {
+                _searchQuery = value;
+                _page = 1;
+              });
+            },
+            textInputAction: TextInputAction.search,
+            decoration: _adminFieldDecoration(
+              labelText: 'Search title',
+              hintText: 'Search by resource title',
+              prefixIcon: Icons.search,
+              suffixIcon: Icons.tune,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        FilledButton.icon(
+          onPressed: _openFiltersSheet,
+          icon: const Icon(Icons.filter_alt_outlined),
+          label: const Text('Filters'),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _openFiltersSheet() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: 16,
+              right: 16,
+              top: 12,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 12,
+            ),
+            child: SingleChildScrollView(
+              child: _buildFilters(),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildFilters() {
     return Card(
       child: Padding(
@@ -137,25 +228,25 @@ class _AdminDownloadsOverviewScreenState
           children: [
             TextField(
               controller: _userIdController,
-              decoration: const InputDecoration(
+              decoration: _adminFieldDecoration(
                 labelText: 'User ID (optional UUID)',
-                border: OutlineInputBorder(),
+                prefixIcon: Icons.person_outline,
               ),
             ),
             const SizedBox(height: 8),
             TextField(
               controller: _resourceIdController,
-              decoration: const InputDecoration(
+              decoration: _adminFieldDecoration(
                 labelText: 'Resource ID (optional UUID)',
-                border: OutlineInputBorder(),
+                prefixIcon: Icons.badge_outlined,
               ),
             ),
             const SizedBox(height: 8),
             DropdownButtonFormField<String?>(
               initialValue: _source,
-              decoration: const InputDecoration(
+              decoration: _adminFieldDecoration(
                 labelText: 'Source',
-                border: OutlineInputBorder(),
+                prefixIcon: Icons.filter_alt_outlined,
               ),
               items: const [
                 DropdownMenuItem<String?>(value: null, child: Text('All')),
@@ -178,6 +269,7 @@ class _AdminDownloadsOverviewScreenState
                       setState(() {
                         _page = 1;
                       });
+                      Navigator.of(context).pop();
                     },
                     child: const Text('Apply Filters'),
                   ),
@@ -192,6 +284,7 @@ class _AdminDownloadsOverviewScreenState
                         _source = null;
                         _page = 1;
                       });
+                      Navigator.of(context).pop();
                     },
                     child: const Text('Clear'),
                   ),

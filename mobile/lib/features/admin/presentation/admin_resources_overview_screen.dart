@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/widgets/ui_state_widgets.dart';
-import '../../../core/utils/app_logger.dart';
 import '../../auth/application/auth_controller.dart';
+import '../../subjects/domain/paginated_result.dart';
+import '../../subjects/domain/subject.dart';
 import '../application/admin_controller.dart';
 import '../domain/admin_query_filters.dart';
 import '../domain/admin_resource_overview_item.dart';
 import 'admin_access_denied_view.dart';
-import 'admin_moderation_actions.dart';
 
 class AdminResourcesOverviewScreen extends ConsumerStatefulWidget {
   const AdminResourcesOverviewScreen({super.key});
@@ -20,29 +21,54 @@ class AdminResourcesOverviewScreen extends ConsumerStatefulWidget {
 
 class _AdminResourcesOverviewScreenState
     extends ConsumerState<AdminResourcesOverviewScreen> {
+  final TextEditingController _searchController = TextEditingController();
   final TextEditingController _departmentController = TextEditingController();
   final TextEditingController _academicYearController = TextEditingController();
-  final TextEditingController _subjectIdController = TextEditingController();
   int _page = 1;
+  String _searchQuery = '';
   String? _status;
   String? _resourceType;
+  String? _subjectId;
   int? _semester;
 
   @override
   void dispose() {
+    _searchController.dispose();
     _departmentController.dispose();
     _academicYearController.dispose();
-    _subjectIdController.dispose();
     super.dispose();
+  }
+
+  InputDecoration _adminFieldDecoration({
+    required String labelText,
+    String? hintText,
+    IconData? prefixIcon,
+    IconData? suffixIcon,
+  }) {
+    return InputDecoration(
+      labelText: labelText,
+      hintText: hintText,
+      filled: true,
+      fillColor: Colors.white,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide.none,
+      ),
+      prefixIcon: prefixIcon == null ? null : Icon(prefixIcon),
+      suffixIcon: suffixIcon == null ? null : Icon(suffixIcon),
+    );
   }
 
   AdminResourcesOverviewFilters get _filters {
     return AdminResourcesOverviewFilters(
       page: _page,
       pageSize: 20,
-      subjectId: _subjectIdController.text.trim().isEmpty
-          ? null
-          : _subjectIdController.text.trim(),
+      subjectId: _subjectId,
       department: _departmentController.text.trim().isEmpty
           ? null
           : _departmentController.text.trim(),
@@ -63,6 +89,7 @@ class _AdminResourcesOverviewScreenState
     }
 
     final filters = _filters;
+    final subjectsAsync = ref.watch(adminSubjectsProvider);
     final overviewAsync = ref.watch(adminResourcesOverviewProvider(filters));
 
     return Scaffold(
@@ -74,7 +101,7 @@ class _AdminResourcesOverviewScreenState
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            _buildFilters(),
+            _buildTopBar(subjectsAsync),
             const SizedBox(height: 12),
             Expanded(
               child: overviewAsync.when(
@@ -86,7 +113,18 @@ class _AdminResourcesOverviewScreenState
                   },
                 ),
                 data: (page) {
-                  if (page.items.isEmpty) {
+                  final query = _searchQuery.trim().toLowerCase();
+                  final filteredItems = query.isEmpty
+                      ? page.items
+                      : page.items
+                          .where(
+                            (item) =>
+                                item.title.toLowerCase().contains(query) ||
+                                item.fileName.toLowerCase().contains(query),
+                          )
+                          .toList(growable: false);
+
+                  if (filteredItems.isEmpty) {
                     return _EmptyState(
                       onRetry: () {
                         ref.invalidate(adminResourcesOverviewProvider(filters));
@@ -98,14 +136,22 @@ class _AdminResourcesOverviewScreenState
                     children: [
                       Expanded(
                         child: ListView.separated(
-                          itemCount: page.items.length,
+                          itemCount: filteredItems.length,
                           separatorBuilder: (context, index) =>
                               const SizedBox(height: 8),
                           itemBuilder: (context, index) {
-                            final item = page.items[index];
+                            final item = filteredItems[index];
                             return _ResourceOverviewCard(
                               item: item,
-                              onModerate: _moderate,
+                              onManage: () async {
+                                final updated = await context.push(
+                                  '/admin/resources/${item.id}/manage',
+                                  extra: item,
+                                );
+                                if (updated == true && mounted) {
+                                  ref.invalidate(adminResourcesOverviewProvider(_filters));
+                                }
+                              },
                             );
                           },
                         ),
@@ -143,7 +189,62 @@ class _AdminResourcesOverviewScreenState
     );
   }
 
-  Widget _buildFilters() {
+  Widget _buildTopBar(AsyncValue<PaginatedResult<Subject>> subjectsAsync) {
+    return Row(
+      children: [
+        Expanded(
+          child: TextField(
+            controller: _searchController,
+            onChanged: (value) {
+              setState(() {
+                _searchQuery = value;
+                _page = 1;
+              });
+            },
+            textInputAction: TextInputAction.search,
+            decoration: _adminFieldDecoration(
+              labelText: 'Search resources',
+              hintText: 'Search by title or file name',
+              prefixIcon: Icons.search,
+              suffixIcon: Icons.tune,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        FilledButton.icon(
+          onPressed: () => _openFiltersSheet(subjectsAsync),
+          icon: const Icon(Icons.filter_alt_outlined),
+          label: const Text('Filters'),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _openFiltersSheet(
+    AsyncValue<PaginatedResult<Subject>> subjectsAsync,
+  ) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: 16,
+              right: 16,
+              top: 12,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 12,
+            ),
+            child: SingleChildScrollView(
+              child: _buildFilters(subjectsAsync),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildFilters(AsyncValue<PaginatedResult<Subject>> subjectsAsync) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -151,34 +252,92 @@ class _AdminResourcesOverviewScreenState
           children: [
             TextField(
               controller: _departmentController,
-              decoration: const InputDecoration(
+              decoration: _adminFieldDecoration(
                 labelText: 'Department (optional)',
-                border: OutlineInputBorder(),
+                prefixIcon: Icons.apartment,
               ),
             ),
             const SizedBox(height: 8),
             TextField(
               controller: _academicYearController,
-              decoration: const InputDecoration(
+              decoration: _adminFieldDecoration(
                 labelText: 'Academic Year (optional)',
-                border: OutlineInputBorder(),
+                prefixIcon: Icons.calendar_today,
               ),
             ),
             const SizedBox(height: 8),
-            TextField(
-              controller: _subjectIdController,
-              decoration: const InputDecoration(
-                labelText: 'Subject ID (optional UUID)',
-                border: OutlineInputBorder(),
+            subjectsAsync.when(
+              loading: () => const LinearProgressIndicator(),
+              error: (_, __) => Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Failed to load subjects'),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<String?>(
+                    initialValue: _subjectId,
+                    isExpanded: true,
+                    decoration: _adminFieldDecoration(
+                      labelText: 'Subject',
+                      prefixIcon: Icons.menu_book,
+                    ),
+                    items: const [
+                      DropdownMenuItem<String?>(
+                        value: null,
+                        child: Text('All subjects'),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        _subjectId = value;
+                      });
+                    },
+                  ),
+                ],
               ),
+              data: (page) {
+                final validSubjectIds = page.items
+                    .map((subject) => subject.id)
+                    .toSet();
+                if (_subjectId != null && !validSubjectIds.contains(_subjectId)) {
+                  _subjectId = null;
+                }
+
+                final items = <DropdownMenuItem<String?>>[
+                  const DropdownMenuItem<String?>(
+                    value: null,
+                    child: Text('All subjects'),
+                  ),
+                  ...page.items.map(
+                    (subject) => DropdownMenuItem<String?>(
+                      value: subject.id,
+                      child: Text('${subject.name} (${subject.code})'),
+                    ),
+                  ),
+                ];
+
+                return DropdownButtonFormField<String?>(
+                  initialValue: _subjectId,
+                  isExpanded: true,
+                  decoration: _adminFieldDecoration(
+                    labelText: 'Subject',
+                    prefixIcon: Icons.menu_book,
+                  ),
+                  items: items,
+                  onChanged: (value) {
+                    setState(() {
+                      _subjectId = value;
+                    });
+                  },
+                );
+              },
             ),
             const SizedBox(height: 8),
             DropdownButtonFormField<String?>(
               initialValue: _status,
               isExpanded: true,
-              decoration: const InputDecoration(
+              decoration: _adminFieldDecoration(
                 labelText: 'Status',
-                border: OutlineInputBorder(),
+                prefixIcon: Icons.flag_outlined,
               ),
               items: const [
                 DropdownMenuItem<String?>(value: null, child: Text('All')),
@@ -213,9 +372,9 @@ class _AdminResourcesOverviewScreenState
             DropdownButtonFormField<String?>(
               initialValue: _resourceType,
               isExpanded: true,
-              decoration: const InputDecoration(
+              decoration: _adminFieldDecoration(
                 labelText: 'Type',
-                border: OutlineInputBorder(),
+                prefixIcon: Icons.category_outlined,
               ),
               items: const [
                 DropdownMenuItem<String?>(value: null, child: Text('All')),
@@ -241,9 +400,9 @@ class _AdminResourcesOverviewScreenState
             const SizedBox(height: 8),
             DropdownButtonFormField<int?>(
               initialValue: _semester,
-              decoration: const InputDecoration(
+              decoration: _adminFieldDecoration(
                 labelText: 'Semester',
-                border: OutlineInputBorder(),
+                prefixIcon: Icons.school_outlined,
               ),
               items: [
                 const DropdownMenuItem<int?>(value: null, child: Text('All')),
@@ -280,8 +439,8 @@ class _AdminResourcesOverviewScreenState
                     onPressed: () {
                       _departmentController.clear();
                       _academicYearController.clear();
-                      _subjectIdController.clear();
                       setState(() {
+                        _subjectId = null;
                         _status = null;
                         _resourceType = null;
                         _semester = null;
@@ -298,53 +457,16 @@ class _AdminResourcesOverviewScreenState
       ),
     );
   }
-
-  Future<void> _moderate(
-    AdminResourceOverviewItem item,
-    String status,
-  ) async {
-    appLog(
-      'Admin moderation request: resourceId=${item.id} from=${item.status} to=$status',
-    );
-
-    await ref.read(adminModerationControllerProvider.notifier).updateResourceStatus(
-          resourceId: item.id,
-          status: status,
-        );
-
-    final moderationState = ref.read(adminModerationControllerProvider);
-    if (!mounted) {
-      return;
-    }
-
-    if (moderationState.hasError) {
-      appLog(
-        'Admin moderation failed: resourceId=${item.id} to=$status error=${moderationState.error}',
-      );
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Status update failed: ${moderationState.error}')),
-      );
-      return;
-    }
-
-    appLog('Admin moderation success: resourceId=${item.id} to=$status');
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Status updated to $status')),
-    );
-    ref.invalidate(adminResourcesOverviewProvider(_filters));
-  }
 }
 
 class _ResourceOverviewCard extends StatelessWidget {
   const _ResourceOverviewCard({
     required this.item,
-    required this.onModerate,
+    required this.onManage,
   });
 
   final AdminResourceOverviewItem item;
-  final Future<void> Function(AdminResourceOverviewItem item, String status)
-      onModerate;
+  final VoidCallback onManage;
 
   @override
   Widget build(BuildContext context) {
@@ -371,13 +493,15 @@ class _ResourceOverviewCard extends StatelessWidget {
               const SizedBox(height: 6),
               Text(item.description!),
             ],
-            if (item.canModerate) ...[
-              const SizedBox(height: 10),
-              AdminModerationActions(
-                resourceTitle: item.title,
-                onConfirm: (status) => onModerate(item, status),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: onManage,
+                icon: const Icon(Icons.settings_outlined),
+                label: const Text('Manage Resource'),
               ),
-            ],
+            ),
           ],
         ),
       ),

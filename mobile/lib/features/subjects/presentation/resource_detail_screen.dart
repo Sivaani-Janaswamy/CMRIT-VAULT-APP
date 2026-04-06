@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/ui_state_widgets.dart';
+import '../../downloads/application/downloads_controller.dart';
 import '../../resources/application/recently_viewed_provider.dart';
 import '../application/subjects_controller.dart';
 import '../domain/download_url_result.dart';
@@ -181,6 +182,7 @@ class _ResourceDetailScreenState extends ConsumerState<ResourceDetailScreen> {
     try {
       final DownloadUrlResult result =
           await ref.read(subjectsRepositoryProvider).createDownloadUrl(resource.id);
+      ref.invalidate(downloadsHistoryProvider);
       if (!context.mounted) {
         return;
       }

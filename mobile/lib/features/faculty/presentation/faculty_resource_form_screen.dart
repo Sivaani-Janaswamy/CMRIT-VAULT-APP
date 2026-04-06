@@ -17,10 +17,12 @@ class FacultyResourceFormScreen extends ConsumerStatefulWidget {
     super.key,
     this.resourceId,
     this.initialResource,
+    this.enableCreateAnother = false,
   });
 
   final String? resourceId;
   final ResourceItem? initialResource;
+  final bool enableCreateAnother;
 
   bool get isEdit => resourceId != null && resourceId!.isNotEmpty;
 
@@ -31,7 +33,8 @@ class FacultyResourceFormScreen extends ConsumerStatefulWidget {
 
 class _FacultyResourceFormScreenState
     extends ConsumerState<FacultyResourceFormScreen> {
-  final _formKey = GlobalKey<FormState>();
+  GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final ScrollController _scrollController = ScrollController();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _academicYearController = TextEditingController();
@@ -44,8 +47,12 @@ class _FacultyResourceFormScreenState
   int _semester = 1;
   String? _selectedSubjectId;
   bool _isSaving = false;
+  bool _isUploading = false;
+  double _uploadProgress = 0;
   String? _loadError;
   String? _uploadStateLabel;
+  bool _showCreateAnotherAction = false;
+  bool _submissionCompleted = false;
 
   Uint8List? _selectedFileBytes;
   String? _selectedFileName;
@@ -63,6 +70,7 @@ class _FacultyResourceFormScreenState
 
   @override
   void dispose() {
+    _scrollController.dispose();
     _titleController.dispose();
     _descriptionController.dispose();
     _academicYearController.dispose();
@@ -176,8 +184,11 @@ class _FacultyResourceFormScreenState
 
     setState(() {
       _isSaving = true;
+      _isUploading = !widget.isEdit;
+      _uploadProgress = 0;
       _uploadStateLabel = widget.isEdit ? 'saving...' : 'uploading...';
       _pendingUploadError = null;
+      _showCreateAnotherAction = false;
     });
 
     try {
@@ -211,6 +222,15 @@ class _FacultyResourceFormScreenState
           ),
         ),
       );
+
+      if (!widget.isEdit && widget.enableCreateAnother) {
+        setState(() {
+          _showCreateAnotherAction = true;
+          _submissionCompleted = true;
+        });
+        return;
+      }
+
       Navigator.of(context).pop(true);
     } catch (error) {
       if (!mounted) {
@@ -239,9 +259,44 @@ class _FacultyResourceFormScreenState
       if (mounted) {
         setState(() {
           _isSaving = false;
+          _isUploading = false;
+          _uploadProgress = 0;
           _uploadStateLabel = null;
         });
       }
+    }
+  }
+
+  Future<void> _createAnotherSameSubject() async {
+    setState(() {
+      _formKey = GlobalKey<FormState>();
+      _titleController.clear();
+      _descriptionController.clear();
+      _academicYearController.clear();
+      _fileNameController.clear();
+      _filePathController.clear();
+      _fileSizeController.clear();
+      _mimeTypeController.clear();
+      _selectedFileBytes = null;
+      _selectedFileName = null;
+      _selectedMimeType = null;
+      _pendingUploadError = null;
+      _uploadStateLabel = null;
+      _isSaving = false;
+      _isUploading = false;
+      _uploadProgress = 0;
+      _showCreateAnotherAction = false;
+      _resourceType = 'note';
+      _semester = 1;
+      _submissionCompleted = false;
+    });
+
+    if (_scrollController.hasClients) {
+      await _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+      );
     }
   }
 
@@ -254,6 +309,8 @@ class _FacultyResourceFormScreenState
 
     setState(() {
       _isSaving = true;
+      _isUploading = true;
+      _uploadProgress = 0;
       _uploadStateLabel = 'retrying upload...';
     });
 
@@ -273,6 +330,15 @@ class _FacultyResourceFormScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Upload completed successfully')),
       );
+
+      if (!widget.isEdit && widget.enableCreateAnother) {
+        setState(() {
+          _showCreateAnotherAction = true;
+          _submissionCompleted = true;
+        });
+        return;
+      }
+
       Navigator.of(context).pop(true);
     } catch (error) {
       if (!mounted) {
@@ -285,6 +351,8 @@ class _FacultyResourceFormScreenState
       if (mounted) {
         setState(() {
           _isSaving = false;
+          _isUploading = false;
+          _uploadProgress = 0;
           _uploadStateLabel = null;
         });
       }
@@ -307,6 +375,102 @@ class _FacultyResourceFormScreenState
     if (lower.endsWith('.png')) return 'image/png';
     if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg';
     return 'application/octet-stream';
+  }
+
+  String _subjectLabel(Subject subject) => '${subject.name} (${subject.code})';
+
+  Future<void> _openSubjectPicker(
+    BuildContext context,
+    List<Subject> subjects,
+  ) async {
+    final selected = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        final controller = TextEditingController();
+        String query = '';
+
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final normalized = query.trim().toLowerCase();
+            final filtered = normalized.isEmpty
+                ? subjects
+                : subjects
+                    .where(
+                      (subject) =>
+                          subject.name.toLowerCase().contains(normalized) ||
+                          subject.code.toLowerCase().contains(normalized),
+                    )
+                    .toList(growable: false);
+
+            return SafeArea(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  left: 16,
+                  right: 16,
+                  top: 12,
+                  bottom: MediaQuery.of(context).viewInsets.bottom + 12,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: controller,
+                      autofocus: true,
+                      textInputAction: TextInputAction.search,
+                      onChanged: (value) {
+                        setModalState(() {
+                          query = value;
+                        });
+                      },
+                      decoration: const InputDecoration(
+                        hintText: 'Search subjects',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.search),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Flexible(
+                      child: filtered.isEmpty
+                          ? const AppEmptyStateCard(
+                              icon: Icons.search_off,
+                              title: 'No matching subjects',
+                              message: 'Try a different name or code.',
+                            )
+                          : ListView.separated(
+                              shrinkWrap: true,
+                              itemCount: filtered.length,
+                              separatorBuilder: (_, __) => const SizedBox(height: 6),
+                              itemBuilder: (context, index) {
+                                final subject = filtered[index];
+                                return ListTile(
+                                  dense: true,
+                                  title: Text(
+                                    _subjectLabel(subject),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  onTap: () => Navigator.of(context).pop(subject.id),
+                                );
+                              },
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    if (!mounted || selected == null) {
+      return;
+    }
+
+    setState(() {
+      _selectedSubjectId = selected;
+    });
   }
 
   @override
@@ -337,6 +501,7 @@ class _FacultyResourceFormScreenState
                   ),
                 )
               : SingleChildScrollView(
+                  controller: _scrollController,
                   padding: const EdgeInsets.all(16),
                   child: Form(
                     key: _formKey,
@@ -370,44 +535,43 @@ class _FacultyResourceFormScreenState
                             final selectedExists = hasSelected &&
                                 map.containsKey(_selectedSubjectId);
 
-                            final items = <DropdownMenuItem<String>>[];
-                            if (hasSelected && !selectedExists) {
-                              items.add(
-                                DropdownMenuItem<String>(
-                                  value: _selectedSubjectId,
-                                  child: Text('Current subject (${_selectedSubjectId!})'),
-                                ),
-                              );
-                            }
-                            items.addAll(
-                              subjects.map(
-                                (subject) => DropdownMenuItem<String>(
-                                  value: subject.id,
-                                  child: Text('${subject.name} (${subject.code})'),
-                                ),
-                              ),
-                            );
+                            final selectedLabel = hasSelected
+                                ? (selectedExists
+                                    ? _subjectLabel(map[_selectedSubjectId]!)
+                                    : 'Current subject (${_selectedSubjectId!})')
+                                : null;
 
                             return Column(
                               children: [
-                                DropdownButtonFormField<String>(
-                                  initialValue: _selectedSubjectId,
-                                  isExpanded: true,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Subject',
-                                    border: OutlineInputBorder(),
-                                  ),
-                                  items: items,
-                                  validator: (value) {
+                                FormField<String>(
+                                  validator: (_) {
+                                    final value = _selectedSubjectId;
                                     if (value == null || value.trim().isEmpty) {
                                       return 'Required';
                                     }
                                     return null;
                                   },
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _selectedSubjectId = value;
-                                    });
+                                  builder: (state) {
+                                    return InkWell(
+                                      onTap: () async {
+                                        await _openSubjectPicker(context, subjects);
+                                        state.didChange(_selectedSubjectId);
+                                      },
+                                      borderRadius: BorderRadius.circular(4),
+                                      child: InputDecorator(
+                                        decoration: InputDecoration(
+                                          labelText: 'Subject',
+                                          border: const OutlineInputBorder(),
+                                          errorText: state.errorText,
+                                          suffixIcon: const Icon(Icons.search),
+                                        ),
+                                        child: Text(
+                                          selectedLabel ?? 'Select subject',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    );
                                   },
                                 ),
                                 const SizedBox(height: 10),
@@ -458,7 +622,7 @@ class _FacultyResourceFormScreenState
                                   ),
                                   DropdownMenuItem(
                                     value: 'faculty_upload',
-                                    child: Text('faculty_upload'),
+                                    child: Text('Other materials'),
                                   ),
                                 ],
                                 onChanged: (value) {
@@ -536,13 +700,29 @@ class _FacultyResourceFormScreenState
                         ],
                         const SizedBox(height: 16),
                         if (_uploadStateLabel != null) ...[
-                          Text(_uploadStateLabel!),
+                          Text(
+                            _isUploading && _uploadProgress > 0
+                                ? '${_uploadStateLabel!} ${_uploadProgress.toStringAsFixed(0)}%'
+                                : _uploadStateLabel!,
+                          ),
+                          if (_isUploading) ...[
+                            const SizedBox(height: 8),
+                            LinearProgressIndicator(
+                              value: _uploadProgress > 0
+                                  ? (_uploadProgress / 100).clamp(0, 1)
+                                  : null,
+                            ),
+                          ],
                           const SizedBox(height: 8),
                         ],
                         SizedBox(
                           width: double.infinity,
                           child: FilledButton(
-                            onPressed: _isSaving ? null : _save,
+                            onPressed: (_isSaving ||
+                                    _isUploading ||
+                                    _submissionCompleted)
+                                ? null
+                                : _save,
                             child: Text(
                               _isSaving
                                   ? 'Working...'
@@ -550,6 +730,29 @@ class _FacultyResourceFormScreenState
                             ),
                           ),
                         ),
+                        if (!widget.isEdit &&
+                            widget.enableCreateAnother &&
+                            _showCreateAnotherAction) ...[
+                          const SizedBox(height: 10),
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              onPressed: _isSaving ? null : _createAnotherSameSubject,
+                              icon: const Icon(Icons.add),
+                              label: const Text('+ Create another (same subject)'),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          SizedBox(
+                            width: double.infinity,
+                            child: TextButton(
+                              onPressed: _isSaving
+                                  ? null
+                                  : () => Navigator.of(context).pop(true),
+                              child: const Text('Done'),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
