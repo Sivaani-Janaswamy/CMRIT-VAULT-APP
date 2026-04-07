@@ -82,11 +82,11 @@ Replace placeholders with actual images (recommended path: `docs/screenshots/`).
 
 | Screen | Preview |
 |---|---|
-| Login | ![Login](docs/screenshots/login.png) |
-| Student Home | ![Student Home](docs/screenshots/student-home.png) |
-| Resource Details | ![Resource Details](docs/screenshots/resource-details.png) |
-| Faculty Upload | ![Faculty Upload](docs/screenshots/faculty-upload.png) |
-| Admin Moderation | ![Admin Moderation](docs/screenshots/admin-moderation.png) |
+| Login | ![Login](docs/screenshots/login.jpeg) |
+| Student Home | ![Student Home](docs/screenshots/student-home.jpeg) |
+| Resource Details | ![Resource Details](docs/screenshots/resource-details.jpeg) |
+| Faculty Upload | ![Faculty Upload](docs/screenshots/faculty-upload.jpeg) |
+| Admin Moderation | ![Admin Moderation](docs/screenshots/admin-moderation.jpeg) |
 
 ## Installation and Setup
 

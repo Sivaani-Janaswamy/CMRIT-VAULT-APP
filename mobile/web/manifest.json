@@ -1,6 +1,6 @@
 {
-    "name": "cmrit_vault_mobile",
-    "short_name": "cmrit_vault_mobile",
+    "name": "CMRIT Vault",
+    "short_name": "CMRIT Vault",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
