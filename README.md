@@ -23,6 +23,7 @@ CMRIT Vault is a full-stack mobile platform for academic resource management wit
 - [Features](#features)
 - [Tech Stack](#tech-stack)
 - [Architecture Overview](#architecture-overview)
+- [Download APK](#-download-apk)
 - [Screenshots](#screenshots)
 - [Installation and Setup](#installation-and-setup)
 - [Environment Variables](#environment-variables)
@@ -81,6 +82,10 @@ Production middleware in use:
 - REST communication with backend `/v1/*`
 - release guardrails for `API_BASE_URL` (`https://` required)
 - environment and release tracking through `--dart-define`
+
+## 📲 Download APK
+
+[Download Latest APK](https://github.com/Sivaani-Janaswamy/CMRIT-VAULT-APP/releases/latest)
 
 ## Screenshots
 
