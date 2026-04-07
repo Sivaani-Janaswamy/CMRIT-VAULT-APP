@@ -1,10 +1,15 @@
-# CMRIT Vault
+<div align="center">
+  <img src="mobile/assets/appIcon.png" alt="CMRIT Vault App Icon" width="120" />
+  <h1>CMRIT Vault</h1>
 
-[![Backend](https://img.shields.io/badge/backend-Node.js%20%2B%20Express-1f2937)](#tech-stack)
-[![Mobile](https://img.shields.io/badge/mobile-Flutter-0ea5e9)](#tech-stack)
-[![DB](https://img.shields.io/badge/database-Supabase-3ecf8e)](#tech-stack)
-[![Search](https://img.shields.io/badge/search-Algolia-5468ff)](#tech-stack)
-[![Monitoring](https://img.shields.io/badge/monitoring-Sentry-a855f7)](#monitoring)
+  <p>
+    <a href="#tech-stack"><img src="https://img.shields.io/badge/backend-Node.js%20%2B%20Express-1f2937" alt="Backend" /></a>
+    <a href="#tech-stack"><img src="https://img.shields.io/badge/mobile-Flutter-0ea5e9" alt="Mobile" /></a>
+    <a href="#tech-stack"><img src="https://img.shields.io/badge/database-Supabase-3ecf8e" alt="DB" /></a>
+    <a href="#tech-stack"><img src="https://img.shields.io/badge/search-Algolia-5468ff" alt="Search" /></a>
+    <a href="#monitoring"><img src="https://img.shields.io/badge/monitoring-Sentry-a855f7" alt="Monitoring" /></a>
+  </p>
+</div>
 
 CMRIT Vault is a full-stack mobile platform for academic resource management with role-aware workflows:
 
@@ -27,6 +32,7 @@ CMRIT Vault is a full-stack mobile platform for academic resource management wit
 - [Monitoring](#monitoring)
 - [Future Improvements](#future-improvements)
 - [Contributing](#contributing)
+- [Code of Conduct](#code-of-conduct)
 - [License](#license)
 
 ## Project Overview
@@ -78,15 +84,15 @@ Production middleware in use:
 
 ## Screenshots
 
-Replace placeholders with actual images (recommended path: `docs/screenshots/`).
+Screenshots are stored under `docs/screenshots/`.
 
 | Screen | Preview |
 |---|---|
-| Login | ![Login](docs/screenshots/login.jpeg) |
-| Student Home | ![Student Home](docs/screenshots/student-home.jpeg) |
-| Resource Details | ![Resource Details](docs/screenshots/resource-details.jpeg) |
-| Faculty Upload | ![Faculty Upload](docs/screenshots/faculty-upload.jpeg) |
-| Admin Moderation | ![Admin Moderation](docs/screenshots/admin-moderation.jpeg) |
+| Login | <img src="docs/screenshots/login.jpeg" alt="Login" width="230" /> |
+| Student Home | <img src="docs/screenshots/student-home.jpeg" alt="Student Home" width="230" /> |
+| Resource Details | <img src="docs/screenshots/resource-details.jpeg" alt="Resource Details" width="230" /> |
+| Faculty Upload | <img src="docs/screenshots/faculty-upload.jpeg" alt="Faculty Upload" width="230" /> |
+| Admin Moderation | <img src="docs/screenshots/admin-moderation.jpeg" alt="Admin Moderation" width="230" /> |
 
 ## Installation and Setup
 
@@ -300,6 +306,10 @@ Use the same define set for iOS release builds.
    - Mobile: `flutter analyze && flutter test`
 4. Open a PR with scope, risk, and test notes
 
+## Code of Conduct
+
+Please read [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) before contributing.
+
 ## License
 
-No `LICENSE` file is present yet. Until added, treat this repository as proprietary.
+This project is licensed under the MIT License. See [LICENSE](LICENSE).
