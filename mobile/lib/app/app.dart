@@ -50,6 +50,7 @@ class _CmrItVaultAppState extends ConsumerState<CmrItVaultApp> {
         if (snapshot.connectionState != ConnectionState.done) {
           appLog('CmrItVaultApp.build(): FutureBuilder loading');
           return const MaterialApp(
+            title: 'CMRIT Vault',
             home: Scaffold(
               body: Center(
                 child: Column(
@@ -68,6 +69,7 @@ class _CmrItVaultAppState extends ConsumerState<CmrItVaultApp> {
         if (snapshot.hasError) {
           appLog('CmrItVaultApp.build(): FutureBuilder error -> ${snapshot.error}');
           return MaterialApp(
+            title: 'CMRIT Vault',
             home: Scaffold(
               body: Center(
                 child: Column(
@@ -87,6 +89,7 @@ class _CmrItVaultAppState extends ConsumerState<CmrItVaultApp> {
         final router = ref.watch(appRouterProvider);
 
         return MaterialApp.router(
+          title: 'CMRIT Vault',
           debugShowCheckedModeBanner: false,
           routerConfig: router,
           theme: ThemeData(
