@@ -1,19 +1,49 @@
 import dotenv from 'dotenv';
 
-dotenv.config();
+type RuntimeMode = 'development' | 'test' | 'production';
 
-const isTestEnv = (process.env.NODE_ENV ?? '').trim() === 'test';
-const isNodeTestRunner = process.argv.includes('--test');
+function resolveMode(): RuntimeMode {
+  const mode = (process.env.NODE_ENV ?? 'development').trim().toLowerCase();
+  if (mode === 'production') {
+    return 'production';
+  }
+  if (mode === 'test') {
+    return 'test';
+  }
+  return 'development';
+}
+
+const mode = resolveMode();
+
+function loadEnvironmentFiles(currentMode: RuntimeMode): void {
+  if (currentMode === 'test') {
+    // Allow dedicated test values while keeping .env as a fallback source.
+    dotenv.config({ path: '.env.test' });
+  }
+  dotenv.config();
+}
+
+loadEnvironmentFiles(mode);
+
+const requiredEnvTestDefaults: Record<string, string> = {
+  SUPABASE_URL: 'https://test.supabase.local',
+  SUPABASE_SERVICE_ROLE_KEY: 'test-service-role-key'
+};
 
 function required(name: string): string {
   const value = process.env[name];
-  if (!value) {
-    if (isTestEnv || isNodeTestRunner) {
-      return `test-${name.toLowerCase()}`;
-    }
-    throw new Error(`Missing required env var: ${name}`);
+  if (value) {
+    return value;
   }
-  return value;
+
+  if (mode === 'test') {
+    const fallback = requiredEnvTestDefaults[name];
+    if (fallback) {
+      return fallback;
+    }
+  }
+
+  throw new Error(`Missing required env var: ${name}`);
 }
 
 function asNumber(value: string | undefined, fallback: number): number {
@@ -54,8 +84,8 @@ function asCsvList(value: string | undefined): string[] {
 
 export const env = {
   port: asNumber(process.env.PORT, 4000),
-  nodeEnv: process.env.NODE_ENV ?? 'development',
-  isProduction: (process.env.NODE_ENV ?? 'development') === 'production',
+  nodeEnv: mode,
+  isProduction: mode === 'production',
   appAllowedOrigins: asCsvList(process.env.APP_ALLOWED_ORIGINS),
   allowMissingOrigin: asBoolean(process.env.ALLOW_MISSING_ORIGIN, true),
   requestTimeoutMs: asNumber(process.env.REQUEST_TIMEOUT_MS, 8000),

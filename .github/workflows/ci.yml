@@ -30,6 +30,9 @@ jobs:
 
       - name: Test
         run: npm test
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
 
   mobile:
     runs-on: ubuntu-latest
