@@ -2,9 +2,14 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+const isTestEnv = (process.env.NODE_ENV ?? '').trim() === 'test';
+
 function required(name: string): string {
   const value = process.env[name];
   if (!value) {
+    if (isTestEnv) {
+      return `test-${name.toLowerCase()}`;
+    }
     throw new Error(`Missing required env var: ${name}`);
   }
   return value;
