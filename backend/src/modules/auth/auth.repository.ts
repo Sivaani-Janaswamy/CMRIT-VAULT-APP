@@ -78,7 +78,7 @@ class AuthRepository {
       email: user.email,
       full_name: user.fullName || existingUser?.full_name || user.email.split('@')[0],
       role_id:
-        existingUser?.role_id ?? (await this.resolveRoleId(user.role ?? 'student'))
+        existingUser?.role_id ?? (await this.resolveRoleId('student'))
     };
 
     const { data, error } = await supabaseServiceClient

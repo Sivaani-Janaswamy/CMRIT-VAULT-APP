@@ -38,9 +38,9 @@ export const createResourceSchema = z
     academicYear: z.string().trim().min(1),
     semester: z.coerce.number().int().min(1).max(8),
     fileName: z.string().trim().min(1),
-    filePath: z.string().trim().min(1),
+    filePath: z.string().trim().min(1).optional(),
     fileSizeBytes: z.coerce.number().int().min(1),
-    mimeType: z.string().trim().min(1)
+    mimeType: z.string().trim().min(1).optional()
   })
   .strict();
 

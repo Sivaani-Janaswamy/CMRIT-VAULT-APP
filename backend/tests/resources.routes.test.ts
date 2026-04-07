@@ -475,7 +475,7 @@ test('POST /v1/resources creates a draft resource for faculty users', async () =
     name: 'Database Management Systems',
     code: 'CSE301'
   } as never);
-  resourcesRepository.createResource = async (_input, uploadedBy, status) =>
+  resourcesRepository.createResource = async (_resourceId, _input, uploadedBy, status) =>
     baseResource({
       uploadedBy,
       status
@@ -502,7 +502,9 @@ test('POST /v1/resources creates a draft resource for faculty users', async () =
     assert.equal(json.success, true);
     assert.equal(json.data.resource.status, 'draft');
     assert.equal(json.data.uploadSession.resourceId, resourceId);
-    assert.equal(json.data.uploadSession.uploadPath, 'resources/note/44444444-4444-4444-4444-444444444444/dbms.pdf');
+    assert.match(json.data.uploadSession.uploadPath, /^resources\/note\/[0-9a-f-]+\/dbms\.pdf$/);
+    assert.equal(typeof json.data.uploadSession.uploadToken, 'string');
+    assert.equal(typeof json.data.uploadSession.signedUploadUrl, 'string');
     assert.equal(typeof json.data.uploadSession.expiresAt, 'string');
   });
 });
@@ -651,6 +653,8 @@ test('POST /v1/resources/:id/complete keeps draft state for owner', async () => 
     isActive: true
   });
   resourcesRepository.findById = async () => baseResource({ uploadedBy: faculty.id, status: 'draft' });
+  resourcesRepository.updateResource = async (_id, _input) =>
+    baseResource({ uploadedBy: faculty.id, status: 'draft' });
   resourcesRepository.updateResourceStatus = async (_id, status) => baseResource({ uploadedBy: faculty.id, status });
 
   await withServer(createApp(faculty), async (baseUrl) => {
@@ -678,6 +682,8 @@ test('POST /v1/resources/:id/submit moves a faculty-owned resource to pending_re
     isActive: true
   });
   resourcesRepository.findById = async () => baseResource({ uploadedBy: faculty.id, status: 'draft' });
+  resourcesRepository.updateResource = async (_id, _input) =>
+    baseResource({ uploadedBy: faculty.id, status: 'draft' });
   resourcesRepository.updateResourceStatus = async (_id, status) => baseResource({ uploadedBy: faculty.id, status });
 
   await withServer(createApp(faculty), async (baseUrl) => {

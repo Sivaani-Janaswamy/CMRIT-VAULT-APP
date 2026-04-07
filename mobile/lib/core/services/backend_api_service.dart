@@ -24,7 +24,6 @@ class BackendApiService {
 
   final String baseUrl;
   final SupabaseClient supabaseClient;
-  static const String _storageBucket = 'cmrit-vault-files';
 
   Future<void> syncAuth() async {
     appLog('BackendApiService.syncAuth(): start');
@@ -518,18 +517,29 @@ class BackendApiService {
 
   Future<void> uploadFileWithSession({
     required String uploadPath,
+    required String uploadToken,
+    required String signedUploadUrl,
     required Uint8List fileBytes,
     required String mimeType,
   }) async {
     appLog('BackendApiService.uploadFileWithSession(): start path=$uploadPath');
-    await supabaseClient.storage.from(_storageBucket).uploadBinary(
-          uploadPath,
-          fileBytes,
-          fileOptions: FileOptions(
-            contentType: mimeType,
-            upsert: true,
-          ),
-        );
+    final uri = Uri.tryParse(signedUploadUrl);
+    if (uri == null) {
+      throw Exception('Invalid signed upload URL');
+    }
+
+    final response = await http.put(
+      uri,
+      headers: {
+        'Content-Type': mimeType,
+        'x-upsert': 'false',
+      },
+      body: fileBytes,
+    );
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception('Signed upload failed (${response.statusCode})');
+    }
     appLog('BackendApiService.uploadFileWithSession(): success path=$uploadPath');
   }
 

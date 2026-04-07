@@ -70,6 +70,8 @@ class FacultyRepository {
   }) async {
     await apiService.uploadFileWithSession(
       uploadPath: uploadSession.uploadPath,
+      uploadToken: uploadSession.uploadToken,
+      signedUploadUrl: uploadSession.signedUploadUrl,
       fileBytes: fileBytes,
       mimeType: mimeType,
     );

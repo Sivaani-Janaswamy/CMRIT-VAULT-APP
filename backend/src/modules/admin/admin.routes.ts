@@ -1,6 +1,7 @@
 import { Router } from 'express';
 
 import { authMiddleware } from '../../common/middleware/auth';
+import { adminLimiter } from '../../common/middleware/rateLimiters';
 import { validateQuery } from '../../common/middleware/validate';
 import {
   adminDashboardQuerySchema,
@@ -16,6 +17,7 @@ import {
 export const adminRouter = Router();
 
 adminRouter.use(authMiddleware);
+adminRouter.use(adminLimiter);
 adminRouter.get('/dashboard/summary', validateQuery(adminDashboardQuerySchema), getAdminDashboardSummaryHandler);
 adminRouter.get('/resources/overview', validateQuery(adminResourcesOverviewQuerySchema), listAdminResourcesOverviewHandler);
 adminRouter.get('/downloads/overview', validateQuery(adminDownloadsOverviewQuerySchema), listAdminDownloadsOverviewHandler);

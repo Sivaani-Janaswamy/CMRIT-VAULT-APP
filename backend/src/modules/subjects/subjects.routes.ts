@@ -1,6 +1,7 @@
 import { Router } from 'express';
 
 import { authMiddleware } from '../../common/middleware/auth';
+import { adminLimiter } from '../../common/middleware/rateLimiters';
 import { validateBody, validateParams } from '../../common/middleware/validate';
 import {
   createAdminSubjectHandler,
@@ -22,6 +23,7 @@ subjectsRouter.get('/', authMiddleware, listSubjectsHandler);
 subjectsRouter.get('/:id', authMiddleware, validateParams(subjectIdParamSchema), getSubjectHandler);
 
 adminSubjectsRouter.use(authMiddleware);
+adminSubjectsRouter.use(adminLimiter);
 adminSubjectsRouter.post('/', validateBody(createSubjectSchema), createAdminSubjectHandler);
 adminSubjectsRouter.patch(
   '/:id',

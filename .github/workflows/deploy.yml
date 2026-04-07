@@ -1,0 +1,25 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        type: choice
+        required: true
+        options:
+          - staging
+          - production
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deployment placeholder
+        run: |
+          echo "Deploying to ${{ github.event.inputs.environment }}"
+          echo "Implement platform-specific deployment here (backend service, mobile release pipeline)."

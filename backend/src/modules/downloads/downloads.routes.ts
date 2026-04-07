@@ -1,6 +1,7 @@
 import { Router } from 'express';
 
 import { authMiddleware } from '../../common/middleware/auth';
+import { adminLimiter, downloadUrlLimiter } from '../../common/middleware/rateLimiters';
 import { validateBody, validateParams, validateQuery } from '../../common/middleware/validate';
 import {
   createDownloadUrlHandler,
@@ -21,6 +22,7 @@ export const adminDownloadsRouter = Router();
 resourceDownloadsRouter.post(
   '/:id/download-url',
   authMiddleware,
+  downloadUrlLimiter,
   validateParams(resourceIdParamSchema),
   validateBody(createDownloadUrlSchema),
   createDownloadUrlHandler
@@ -29,5 +31,6 @@ resourceDownloadsRouter.post(
 downloadsRouter.get('/me', authMiddleware, validateQuery(listMyDownloadsQuerySchema), listMyDownloadsHandler);
 
 adminDownloadsRouter.use(authMiddleware);
+adminDownloadsRouter.use(adminLimiter);
 adminDownloadsRouter.get('/', validateQuery(listAdminDownloadsQuerySchema), listAdminDownloadsHandler);
 

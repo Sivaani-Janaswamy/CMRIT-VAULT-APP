@@ -104,6 +104,7 @@ class HomeScreen extends ConsumerWidget {
                   ),
                   data: (page) {
                     final items = page.items
+                        .take(10)
                         .map(
                           (subject) => CategoryGridItem(
                             title: subject.name,

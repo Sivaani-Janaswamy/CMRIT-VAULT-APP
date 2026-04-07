@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
 
 import '../../../core/services/backend_api_service.dart';
@@ -116,6 +117,9 @@ class AuthController extends Notifier<AuthState> {
     ref.read(recentlyViewedScopeProvider.notifier).state = null;
     ref.read(recentlyViewedProvider.notifier).clear();
     await ref.read(supabaseClientProvider).auth.signOut();
+    Sentry.configureScope((scope) {
+      scope.setUser(null);
+    });
     state = AuthState.unauthenticated();
     appLog('AuthController.signOut(): completed');
   }
@@ -129,6 +133,9 @@ class AuthController extends Notifier<AuthState> {
     appLog('AuthController._handleSession(): start session=${session != null}');
     if (session == null) {
       ref.read(recentlyViewedScopeProvider.notifier).state = null;
+      Sentry.configureScope((scope) {
+        scope.setUser(null);
+      });
       state = AuthState.unauthenticated();
       appLog('AuthController._handleSession(): no session -> unauthenticated');
       return;
@@ -147,6 +154,14 @@ class AuthController extends Notifier<AuthState> {
         session: session,
         user: user,
       );
+      Sentry.configureScope((scope) {
+        scope.setUser(SentryUser(
+          id: user.id,
+          email: user.email,
+          username: user.fullName,
+        ));
+        scope.setTag('user_role', user.role);
+      });
       appLog(
         'AuthController._handleSession(): authenticated role=${user.role}, email=${user.email}',
       );

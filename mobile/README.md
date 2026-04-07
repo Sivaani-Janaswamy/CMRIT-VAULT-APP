@@ -1,16 +1,36 @@
-# cmrit_vault_mobile
+# CMRIT Vault Mobile
 
-A new Flutter project.
+Flutter client for CMRIT Vault.
 
-## Getting Started
+## Environment configuration
 
-This project is a starting point for a Flutter application.
+Release builds require runtime defines:
 
-A few resources to get you started if this is your first Flutter project:
+- `API_BASE_URL` (required in release, HTTPS only)
+- `APP_ENV` (example: `staging`, `production`)
+- `APP_VERSION` (example: `1.0.0+5`)
+- `SENTRY_DSN` (optional but recommended)
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## Local run
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```bash
+flutter pub get
+flutter run --dart-define=API_BASE_URL=http://10.0.2.2:4000 --dart-define=APP_ENV=development
+```
+
+## Production build example
+
+```bash
+flutter build apk --release \
+	--dart-define=API_BASE_URL=https://api.example.com \
+	--dart-define=APP_ENV=production \
+	--dart-define=APP_VERSION=1.0.0+1 \
+	--dart-define=SENTRY_DSN=https://examplePublicKey@o0.ingest.sentry.io/0
+```
+
+## Quality gates
+
+```bash
+flutter analyze
+flutter test
+```

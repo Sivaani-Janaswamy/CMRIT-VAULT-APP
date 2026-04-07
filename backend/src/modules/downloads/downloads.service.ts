@@ -1,5 +1,6 @@
 import { ForbiddenError } from '../../common/errors/ForbiddenError';
 import { NotFoundError } from '../../common/errors/NotFoundError';
+import { withRetryAndTimeout } from '../../common/utils/retry';
 import { supabaseServiceClient } from '../../integrations/supabase/client';
 import { resourcesRepository } from '../resources/resources.repository';
 import { canViewResource } from '../resources/resources.utils';
@@ -40,9 +41,11 @@ class DownloadsService {
       throw new NotFoundError('Resource not found');
     }
 
-    const { data, error } = await supabaseServiceClient.storage
-      .from(DOWNLOAD_BUCKET)
-      .createSignedUrl(resource.filePath, 15 * 60);
+    const { data, error } = await withRetryAndTimeout(() =>
+      supabaseServiceClient.storage
+        .from(DOWNLOAD_BUCKET)
+        .createSignedUrl(resource.filePath, 15 * 60)
+    );
 
     if (error || !data?.signedUrl) {
       throw error ?? new Error('Failed to create signed download URL');

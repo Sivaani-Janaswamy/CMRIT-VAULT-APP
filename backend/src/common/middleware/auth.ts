@@ -5,6 +5,7 @@ import { UnauthorizedError } from '../errors/UnauthorizedError';
 import type { AuthenticatedRequest } from '../types/authenticated-request';
 import type { User } from '../types/user';
 import { logDebug } from '../utils/logger';
+import { withRetryAndTimeout } from '../utils/retry';
 
 export async function authMiddleware(
   req: Request,
@@ -26,7 +27,9 @@ export async function authMiddleware(
       throw new UnauthorizedError('Missing bearer token');
     }
 
-    const { data, error } = await supabaseServiceClient.auth.getUser(token);
+    const { data, error } = await withRetryAndTimeout(() =>
+      supabaseServiceClient.auth.getUser(token)
+    );
     if (error || !data.user) {
       logDebug('authMiddleware: token validation failed', {
         error: error?.message ?? 'no user returned'
@@ -43,7 +46,8 @@ export async function authMiddleware(
         (data.user.user_metadata?.name as string | undefined) ??
         data.user.email ??
         '',
-      role: (data.user.user_metadata?.role as string | undefined) ?? 'student'
+      // Role must be resolved from internal DB during sync/authorization checks.
+      role: 'student'
     };
     (req as AuthenticatedRequest).user = user;
     logDebug('authMiddleware: user attached to request', {

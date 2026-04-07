@@ -30,7 +30,7 @@ void main() {
     await tester.tap(find.text('Publish'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Confirm moderation'), findsOneWidget);
+    expect(find.text('Are you sure?'), findsOneWidget);
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
 
@@ -54,7 +54,7 @@ void main() {
     await tester.tap(find.text('Reject'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Confirm moderation'), findsOneWidget);
+    expect(find.text('Are you sure?'), findsOneWidget);
     await tester.tap(find.text('Confirm'));
     await tester.pumpAndSettle();
 

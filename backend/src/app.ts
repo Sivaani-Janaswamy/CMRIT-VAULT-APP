@@ -1,18 +1,22 @@
 import express from 'express';
-import cors from 'cors';
 import helmet from 'helmet';
 
 import { modulesRouter } from './modules';
 import { errorHandler } from './common/middleware/errorHandler';
 import { notFound } from './common/middleware/notFound';
 import { requestLogger } from './common/middleware/requestLogger';
+import { requestIdMiddleware } from './common/middleware/requestId';
+import { corsMiddleware } from './common/middleware/corsPolicy';
+import { globalLimiter } from './common/middleware/rateLimiters';
 import { logDebug } from './common/utils/logger';
 
 export function createApp() {
   const app = express();
 
+  app.use(requestIdMiddleware);
+  app.use(globalLimiter);
   app.use(helmet());
-  app.use(cors());
+  app.use(corsMiddleware);
   app.use(express.json());
   app.use(requestLogger);
 

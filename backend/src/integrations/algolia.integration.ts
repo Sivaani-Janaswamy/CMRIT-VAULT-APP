@@ -1,4 +1,5 @@
 import { env } from '../config/env';
+import { withRetryAndTimeout } from '../common/utils/retry';
 import type {
   ResourceStatus,
   ResourceType,
@@ -78,15 +79,17 @@ class AlgoliaIntegration {
     body?: unknown
   ): Promise<T> {
     const { appId } = this.getConfig();
-    const response = await fetch(`${host}${path}`, {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Algolia-Application-Id': appId,
-        'X-Algolia-API-Key': apiKey
-      },
-      body: body === undefined ? undefined : JSON.stringify(body)
-    });
+    const response = await withRetryAndTimeout(() =>
+      fetch(`${host}${path}`, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Algolia-Application-Id': appId,
+          'X-Algolia-API-Key': apiKey
+        },
+        body: body === undefined ? undefined : JSON.stringify(body)
+      })
+    );
 
     const text = await response.text();
     let json: T | null = null;

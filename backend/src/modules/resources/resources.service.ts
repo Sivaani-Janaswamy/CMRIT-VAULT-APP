@@ -1,7 +1,12 @@
+import { randomUUID } from 'node:crypto';
+
 import { AppError } from '../../common/errors/AppError';
 import { ForbiddenError } from '../../common/errors/ForbiddenError';
 import { NotFoundError } from '../../common/errors/NotFoundError';
 import { logDebug } from '../../common/utils/logger';
+import { withRetryAndTimeout } from '../../common/utils/retry';
+import { env } from '../../config/env';
+import { supabaseServiceClient } from '../../integrations/supabase/client';
 import { adminRepository } from '../admin/admin.repository';
 import { searchService } from '../search/search.service';
 import { subjectsRepository } from '../subjects/subjects.repository';
@@ -14,14 +19,9 @@ import type {
   ResourceListQuery,
   ResourcePage,
   ResourceStatus,
+  UploadSession,
   UpdateResourceInput
 } from './resources.types';
-
-interface UploadSession {
-  resourceId: string;
-  uploadPath: string;
-  expiresAt: string;
-}
 
 interface CreatedResourceResult {
   resource: Resource;
@@ -29,6 +29,116 @@ interface CreatedResourceResult {
 }
 
 class ResourcesService {
+  private static readonly uploadUrlTtlSeconds = 15 * 60;
+
+  private sanitizeFileName(fileName: string): string {
+    return fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
+  }
+
+  private inferMimeType(fileName: string): string {
+    const lower = fileName.toLowerCase();
+    if (lower.endsWith('.pdf')) return 'application/pdf';
+    if (lower.endsWith('.doc')) return 'application/msword';
+    if (lower.endsWith('.docx')) {
+      return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+    }
+    if (lower.endsWith('.png')) return 'image/png';
+    if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg';
+    return 'application/octet-stream';
+  }
+
+  private ensureUploadPolicy(input: CreateResourceInput): void {
+    if (input.fileSizeBytes <= 0 || input.fileSizeBytes > env.uploadMaxBytes) {
+      throw new AppError(400, 'File size is out of allowed range', 'INVALID_FILE_SIZE');
+    }
+
+    const inferredMime = this.inferMimeType(input.fileName);
+    const mimeCandidate = input.mimeType?.trim() || inferredMime;
+    if (!env.allowedUploadMimeTypes.includes(mimeCandidate)) {
+      throw new AppError(400, 'File type is not allowed', 'INVALID_FILE_TYPE');
+    }
+  }
+
+  private async createSignedUploadSession(resourceId: string, uploadPath: string): Promise<UploadSession> {
+    if (env.nodeEnv === 'test') {
+      return {
+        resourceId,
+        uploadPath,
+        uploadToken: 'test-upload-token',
+        signedUploadUrl: `https://example.test/upload/${resourceId}`,
+        expiresAt: new Date(Date.now() + (ResourcesService.uploadUrlTtlSeconds * 1000)).toISOString()
+      };
+    }
+
+    const { data, error } = await withRetryAndTimeout(() =>
+      supabaseServiceClient.storage
+        .from(env.uploadBucket)
+        .createSignedUploadUrl(uploadPath)
+    );
+
+    if (error || !data?.token || !data?.signedUrl) {
+      throw error ?? new AppError(500, 'Failed to create upload session', 'UPLOAD_SESSION_ERROR');
+    }
+
+    return {
+      resourceId,
+      uploadPath,
+      uploadToken: data.token,
+      signedUploadUrl: data.signedUrl,
+      expiresAt: new Date(Date.now() + (ResourcesService.uploadUrlTtlSeconds * 1000)).toISOString()
+    };
+  }
+
+  private async verifyUploadedObject(resource: Resource): Promise<{ fileSizeBytes: number; mimeType: string }> {
+    if (env.nodeEnv === 'test') {
+      return {
+        fileSizeBytes: resource.fileSizeBytes,
+        mimeType: resource.mimeType
+      };
+    }
+
+    const parts = resource.filePath.split('/');
+    const fileName = parts.pop();
+    const directory = parts.join('/');
+
+    if (!fileName || !directory) {
+      throw new AppError(400, 'Invalid file path', 'INVALID_FILE_PATH');
+    }
+
+    const { data, error } = await withRetryAndTimeout(() =>
+      supabaseServiceClient.storage
+        .from(env.uploadBucket)
+        .list(directory, {
+          limit: 1,
+          search: fileName
+        })
+    );
+
+    if (error) {
+      throw error;
+    }
+
+    const uploaded = (data ?? []).find((item) => item.name === fileName);
+    if (!uploaded) {
+      throw new AppError(400, 'Uploaded file not found', 'UPLOAD_NOT_FOUND');
+    }
+
+    const size = Number((uploaded.metadata as { size?: unknown } | null)?.size ?? 0);
+    if (!Number.isFinite(size) || size <= 0 || size > env.uploadMaxBytes) {
+      throw new AppError(400, 'Uploaded file size is invalid', 'INVALID_FILE_SIZE');
+    }
+
+    const mimeType = this.inferMimeType(fileName);
+    if (!env.allowedUploadMimeTypes.includes(mimeType)) {
+      throw new AppError(400, 'Uploaded file type is invalid', 'INVALID_FILE_TYPE');
+    }
+
+    return {
+      fileSizeBytes: Math.trunc(size),
+      mimeType
+    };
+  }
+
   private async syncSearchIndex(resourceId: string, action: string): Promise<void> {
     try {
       await searchService.syncResourceIndex(resourceId);
@@ -97,13 +207,27 @@ class ResourcesService {
     }
 
     await this.ensureActiveSubject(input.subjectId);
+    this.ensureUploadPolicy(input);
+
+    const resourceId = randomUUID();
+    const sanitizedFileName = this.sanitizeFileName(input.fileName);
+    const canonicalPath = `resources/${input.resourceType}/${resourceId}/${sanitizedFileName}`;
+    const canonicalMimeType = this.inferMimeType(sanitizedFileName);
+
     const status: ResourceStatus = 'draft';
-    const resource = await resourcesRepository.createResource(input, currentUser.id, status);
-    const uploadSession: UploadSession = {
-      resourceId: resource.id,
-      uploadPath: resource.filePath,
-      expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString()
-    };
+    const resource = await resourcesRepository.createResource(
+      resourceId,
+      {
+        ...input,
+        fileName: sanitizedFileName,
+        filePath: canonicalPath,
+        mimeType: canonicalMimeType
+      },
+      currentUser.id,
+      status
+    );
+
+    const uploadSession = await this.createSignedUploadSession(resource.id, canonicalPath);
 
     await this.syncSearchIndex(resource.id, 'resource.create');
 
@@ -168,6 +292,15 @@ class ResourcesService {
 
     if (!this.canModifyResource(resource, currentUser.id, currentUser.role)) {
       throw new ForbiddenError('Resource submission not allowed');
+    }
+
+    const verified = await this.verifyUploadedObject(resource);
+    const synced = await resourcesRepository.updateResource(resourceId, {
+      fileSizeBytes: verified.fileSizeBytes,
+      mimeType: verified.mimeType
+    });
+    if (!synced) {
+      throw new NotFoundError('Resource not found');
     }
 
     const updated = await resourcesRepository.updateResourceStatus(resourceId, 'pending_review');

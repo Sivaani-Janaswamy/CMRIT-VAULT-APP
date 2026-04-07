@@ -182,6 +182,7 @@ class ResourcesRepository {
   }
 
   async createResource(
+    resourceId: string,
     input: CreateResourceInput,
     uploadedBy: string,
     status: ResourceStatus
@@ -189,6 +190,7 @@ class ResourcesRepository {
     const { data, error } = await supabaseServiceClient
       .from('resources')
       .insert({
+        id: resourceId,
         subject_id: input.subjectId,
         uploaded_by: uploadedBy,
         title: input.title,

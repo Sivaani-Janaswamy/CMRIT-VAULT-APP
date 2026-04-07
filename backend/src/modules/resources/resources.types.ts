@@ -49,10 +49,18 @@ export interface CreateResourceInput {
   academicYear: string;
   semester: number;
   fileName: string;
-  filePath: string;
+  filePath?: string;
   fileSizeBytes: number;
-  mimeType: string;
+  mimeType?: string;
   status?: never;
+}
+
+export interface UploadSession {
+  resourceId: string;
+  uploadPath: string;
+  uploadToken: string;
+  signedUploadUrl: string;
+  expiresAt: string;
 }
 
 export interface UpdateResourceInput {

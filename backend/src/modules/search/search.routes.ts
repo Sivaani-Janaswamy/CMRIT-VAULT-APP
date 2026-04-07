@@ -1,6 +1,7 @@
 import { Router } from 'express';
 
 import { authMiddleware } from '../../common/middleware/auth';
+import { adminLimiter } from '../../common/middleware/rateLimiters';
 import { validateParams, validateQuery } from '../../common/middleware/validate';
 import {
   reindexAllResourcesHandler,
@@ -21,6 +22,7 @@ searchRouter.get('/resources', authMiddleware, validateQuery(searchResourcesQuer
 searchRouter.get('/suggest', authMiddleware, validateQuery(suggestQuerySchema), suggestResourcesHandler);
 
 adminSearchRouter.use(authMiddleware);
+adminSearchRouter.use(adminLimiter);
 adminSearchRouter.post('/reindex', reindexAllResourcesHandler);
 adminSearchRouter.post(
   '/resources/:id/reindex',

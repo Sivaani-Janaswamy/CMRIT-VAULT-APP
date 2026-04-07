@@ -40,7 +40,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.widgetWithText(AppBar, 'Create Resource'), findsOneWidget);
-    expect(find.widgetWithText(DropdownButtonFormField<String>, 'Subject'), findsOneWidget);
+    expect(find.widgetWithText(InputDecorator, 'Subject'), findsOneWidget);
+    expect(find.text('Select subject'), findsOneWidget);
     expect(find.widgetWithText(TextFormField, 'Title'), findsOneWidget);
     expect(find.widgetWithText(TextFormField, 'Academic year'), findsOneWidget);
     expect(find.widgetWithText(FilledButton, 'Create & Upload'), findsOneWidget);

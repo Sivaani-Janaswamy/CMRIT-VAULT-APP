@@ -12,12 +12,16 @@
     "test": "set NODE_ENV=test&& node --test -r ts-node/register/transpile-only tests/auth.routes.test.ts tests/users.routes.test.ts tests/subjects.routes.test.ts tests/resources.routes.test.ts tests/downloads.routes.test.ts tests/search.service.test.ts tests/search.routes.test.ts tests/faculty.service.test.ts tests/faculty.routes.test.ts tests/admin.service.test.ts tests/admin.routes.test.ts"
   },
   "dependencies": {
+    "@sentry/node": "^9.18.0",
     "@supabase/supabase-js": "^2.49.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
     "helmet": "^8.0.0",
     "morgan": "^1.10.0",
+    "pino": "^9.6.0",
+    "pino-http": "^10.3.0",
     "zod": "^3.24.1"
   },
   "devDependencies": {
